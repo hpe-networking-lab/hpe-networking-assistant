@@ -3,6 +3,15 @@
 All notable changes to the HPE Networking Assistant are documented here.
 This project adheres to [Semantic Versioning](https://semver.org).
 
+## [1.8.0] — Debug authentication by user
+
+### Added
+- **`troubleshoot_authentication` now accepts `user`** — focus NAC auth debugging on a specific identity by username or certificate CN (free-text match), in addition to `mac`. Makes it easy to isolate why one user is failing 802.1X/MAB.
+- Mist client `search_nac_events` gained a `text` identity filter.
+
+### Companion (Cowork)
+- An interactive **NAC Auth Debugger** dashboard (live, connector-backed) lets you type a username/MAC and see that identity's auth-event timeline, decoded most-recent failure, and a one-click "explain & fix" hand-off to Claude. (Cowork artifact, separate from the packaged extension.)
+
 ## [1.7.0] — NAC Visualizer (Phase 2 complete)
 
 ### Added

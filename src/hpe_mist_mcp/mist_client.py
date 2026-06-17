@@ -287,14 +287,18 @@ class MistClient:
         return self._search(f"/api/v1/orgs/{org_id}/nac_clients/search", params)
 
     def search_nac_events(
-        self, org_id: str, mac: Optional[str] = None, type: Optional[str] = None,
-        nacrule_id: Optional[str] = None, auth_type: Optional[str] = None,
-        duration: str = "1d", limit: int = 100,
+        self, org_id: str, mac: Optional[str] = None, text: Optional[str] = None,
+        type: Optional[str] = None, nacrule_id: Optional[str] = None,
+        auth_type: Optional[str] = None, duration: str = "1d", limit: int = 100,
     ) -> List[Dict[str, Any]]:
-        """Search Access Assurance (NAC) authentication events (permits/denies/etc.)."""
+        """Search Access Assurance (NAC) authentication events (permits/denies/etc.).
+
+        ``text`` is a free-text identity match (username, certificate CN, etc.);
+        ``mac`` filters by client MAC.
+        """
         params = {
-            "duration": duration, "limit": limit, "mac": mac, "type": type,
-            "nacrule_id": nacrule_id, "auth_type": auth_type,
+            "duration": duration, "limit": limit, "mac": mac, "text": text,
+            "type": type, "nacrule_id": nacrule_id, "auth_type": auth_type,
         }
         return self._search(f"/api/v1/orgs/{org_id}/nac_clients/events/search", params)
 

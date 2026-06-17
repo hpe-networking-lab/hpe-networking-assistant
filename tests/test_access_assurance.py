@@ -54,7 +54,9 @@ class FakeClient:
                  "last_ssid": "Corp", "last_vlan": 10, "last_nacrule_name": "Employees",
                  "last_status": "Permitted", "last_seen": 1700000000}]
 
-    def search_nac_events(self, org_id, mac=None, type=None, nacrule_id=None, auth_type=None, duration="1d", limit=100):
+    def search_nac_events(self, org_id, mac=None, text=None, type=None, nacrule_id=None,
+                          auth_type=None, duration="1d", limit=100):
+        self.last_event_query = {"mac": mac, "text": text}
         return [
             {"type": "NAC_CLIENT_PERMIT", "timestamp": 1700000000, "mac": "aa", "username": "bob"},
             {"type": "NAC_CLIENT_DENY", "timestamp": 1700000100, "mac": "cc", "username": "eve",
@@ -86,3 +88,14 @@ def test_troubleshoot_authentication_flags_failures(monkeypatch):
     assert out["failures"][0]["type"] == "NAC_CLIENT_DENY"
     assert out["failures"][0]["reason"] == "no matching rule"
     assert out["event_types"]["NAC_CLIENT_PERMIT"] == 1
+
+
+def test_troubleshoot_authentication_by_user(monkeypatch):
+    fc = FakeClient()
+    monkeypatch.setattr(server._config, "token", "tok")
+    monkeypatch.setattr(server._config, "region", "global01")
+    monkeypatch.setattr(server._config, "org_id", "org-1")
+    monkeypatch.setattr(server, "_client", fc)
+    out = server.tool_troubleshoot_authentication(user="bob@corp")
+    assert out["user"] == "bob@corp"
+    assert fc.last_event_query == {"mac": None, "text": "bob@corp"}

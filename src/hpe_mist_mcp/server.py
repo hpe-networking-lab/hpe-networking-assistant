@@ -450,21 +450,25 @@ def tool_get_nac_clients(
 
 
 def tool_troubleshoot_authentication(
-    org_id: Optional[str] = None, mac: Optional[str] = None, duration: str = "1d", **_: Any,
+    org_id: Optional[str] = None, mac: Optional[str] = None, user: Optional[str] = None,
+    duration: str = "1d", **_: Any,
 ) -> Dict[str, Any]:
     """Diagnose 802.1X/MAB authentication via Access Assurance (NAC) events.
 
-    Returns the auth-event timeline, per-type counts, and highlighted failures
-    (denied/rejected/errored) so you can see why a client failed authentication.
+    Focus on one identity with ``mac`` (client MAC) and/or ``user`` (free-text
+    match on username / certificate CN). Returns the auth-event timeline,
+    per-type counts, and highlighted failures (denied/rejected/errored) so you
+    can see why a specific user or device failed authentication.
     """
     try:
         oid = _resolve_org(org_id)
-        events = client().search_nac_events(oid, mac=mac, duration=duration)
+        events = client().search_nac_events(oid, mac=mac, text=user, duration=duration)
         type_counts = Counter(e.get("type") for e in events if e.get("type"))
         failures = [_nac_event_summary(e) for e in events if _is_auth_failure(e)]
         return {
             "org_id": oid,
             "mac": mac,
+            "user": user,
             "duration": duration,
             "event_count": len(events),
             "event_types": dict(type_counts),
@@ -885,11 +889,12 @@ TOOLS: Dict[str, Dict[str, Any]] = {
         "description": (
             "Troubleshoot 802.1X/MAB authentication using Access Assurance (NAC) events: returns the "
             "auth-event timeline, per-type counts, and highlighted failures (denied/rejected/errored). "
-            "Pass mac to focus on one client."
+            "Focus on one identity with mac (client MAC) and/or user (username or certificate CN)."
         ),
         "schema": _schema({
             **_ORG,
             "mac": {"type": "string", "description": "Client MAC to focus on (optional)."},
+            "user": {"type": "string", "description": "Username or certificate CN to focus on, free-text match (optional)."},
             "duration": {"type": "string", "description": "Lookback window, e.g. 1d, 1h, 7d (default 1d)."},
         }),
     },

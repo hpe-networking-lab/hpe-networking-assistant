@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NAC Dashboard — Acme Corp (sample data)</title>
+<style>body{font-family:system-ui,Arial,sans-serif;margin:28px;} .bar{height:16px;background:#3a7afe;border-radius:4px;min-width:2px;} .bar.fail{background:#e2483d;} .bar-row{display:flex;align-items:center;gap:10px;margin:5px 0;} .bar-label{width:200px;text-align:right;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;} .card{border:1px solid #e2e2e2;border-radius:10px;padding:14px 20px;display:inline-block;margin:6px;} .muted{color:#888;font-size:12px;}</style></head>
+<body><h1>NAC Dashboard — Acme Corp (sample data)</h1>
+<div class="muted">Generated 2026-06-17 04:02 UTC · window 1d</div>
+<div class="cards"><div class="card"><div class="n">128</div><div class="l">NAC clients</div></div>
+<div class="card"><div class="n">412</div><div class="l">Auth events</div></div>
+<div class="card"><div class="n">37</div><div class="l">Failures</div></div>
+<div class="card"><div class="n">91%</div><div class="l">Success rate</div></div></div>
+<h2>Authentication types</h2><div class="bar-row"><div class="bar-label" title="eap-tls">eap-tls</div><div class="bar" style="width:100%"></div><div class="bar-val">86</div></div>
+<div class="bar-row"><div class="bar-label" title="peap">peap</div><div class="bar" style="width:35%"></div><div class="bar-val">30</div></div>
+<div class="bar-row"><div class="bar-label" title="mab">mab</div><div class="bar" style="width:14%"></div><div class="bar-val">12</div></div>
+<h2>Client types</h2><div class="bar-row"><div class="bar-label" title="wireless">wireless</div><div class="bar" style="width:100%"></div><div class="bar-val">116</div></div>
+<div class="bar-row"><div class="bar-label" title="wired">wired</div><div class="bar" style="width:10%"></div><div class="bar-val">12</div></div>
+<h2>Client status</h2><div class="bar-row"><div class="bar-label" title="Permitted">Permitted</div><div class="bar" style="width:100%"></div><div class="bar-val">123</div></div>
+<div class="bar-row"><div class="bar-label" title="Denied">Denied</div><div class="bar" style="width:4%"></div><div class="bar-val">5</div></div>
+<h2>Event types</h2><div class="bar-row"><div class="bar-label" title="NAC_CLIENT_PERMIT">NAC_CLIENT_PERMIT</div><div class="bar" style="width:100%"></div><div class="bar-val">360</div></div>
+<div class="bar-row"><div class="bar-label" title="NAC_CLIENT_DENY">NAC_CLIENT_DENY</div><div class="bar" style="width:8%"></div><div class="bar-val">28</div></div>
+<div class="bar-row"><div class="bar-label" title="NAC_CLIENT_SESSION_STARTED">NAC_CLIENT_SESSION_STARTED</div><div class="bar" style="width:4%"></div><div class="bar-val">15</div></div>
+<div class="bar-row"><div class="bar-label" title="NAC_MDM_LOOKUP_FAILURE">NAC_MDM_LOOKUP_FAILURE</div><div class="bar" style="width:2%"></div><div class="bar-val">9</div></div>
+<h2>Top failing users</h2><div class="bar-row"><div class="bar-label" title="jdoe">jdoe</div><div class="bar fail" style="width:100%"></div><div class="bar-val">22</div></div>
+<div class="bar-row"><div class="bar-label" title="printer-3">printer-3</div><div class="bar fail" style="width:41%"></div><div class="bar-val">9</div></div>
+<div class="bar-row"><div class="bar-label" title="guest-x">guest-x</div><div class="bar fail" style="width:27%"></div><div class="bar-val">6</div></div>
+<h2>Top failing auth rules</h2><div class="bar-row"><div class="bar-label" title="Default-Deny">Default-Deny</div><div class="bar fail" style="width:100%"></div><div class="bar-val">22</div></div>
+<div class="bar-row"><div class="bar-label" title="Quarantine">Quarantine</div><div class="bar fail" style="width:68%"></div><div class="bar-val">15</div></div>
+</body></html>
