@@ -33,6 +33,8 @@ def test_tools_list_has_read_tools_and_setup():
         "generate_inventory_report",
         "find_client",
         "trace_client",
+        "get_nac_clients",
+        "troubleshoot_authentication",
     }
     for tool in res["tools"]:
         assert tool["inputSchema"]["type"] == "object"

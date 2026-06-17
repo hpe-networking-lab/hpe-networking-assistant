@@ -3,6 +3,17 @@
 All notable changes to the HPE Networking Assistant are documented here.
 This project adheres to [Semantic Versioning](https://semver.org).
 
+## [1.6.0] — Access Assurance & auth troubleshooting (Phase 2)
+
+### Added
+- **`get_nac_clients`** — list Access Assurance (NAC) clients authenticated to the network: user, client type (wired/wireless), auth type (EAP-TLS/PEAP/MAB), SSID, VLAN, matched auth rule, and status. Optional `mac` / `auth_type` / `type` filters.
+- **`troubleshoot_authentication`** — pull NAC authentication events over a window and surface failures (denied/rejected/errored) with per-type counts and a timeline, to diagnose why 802.1X/MAB auth is failing. Pass `mac` to focus on one client.
+- Mist client gained NAC search (`/orgs/{id}/nac_clients/search` and `/nac_clients/events/search`).
+
+### Notes
+- Both tools are read-only.
+- The NAC events path follows Mist's `.../events/search` convention; confirm against your tenant during the live smoke test if your account uses a different Access Assurance API path.
+
 ## [1.5.0] — Client trace & troubleshooting (Phase 2)
 
 ### Added

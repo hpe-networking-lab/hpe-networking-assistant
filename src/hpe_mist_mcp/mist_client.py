@@ -272,6 +272,32 @@ class MistClient:
         params = {"mac": mac, "duration": duration, "limit": limit}
         return self._search(f"/api/v1/orgs/{org_id}/clients/events/search", params)
 
+    # -- Access Assurance (NAC) -------------------------------------------
+
+    def search_nac_clients(
+        self, org_id: str, mac: Optional[str] = None, type: Optional[str] = None,
+        auth_type: Optional[str] = None, nacrule_id: Optional[str] = None,
+        duration: str = "1d", limit: int = 100,
+    ) -> List[Dict[str, Any]]:
+        """Search Access Assurance (NAC) clients authenticated to the network."""
+        params = {
+            "duration": duration, "limit": limit, "mac": mac, "type": type,
+            "auth_type": auth_type, "nacrule_id": nacrule_id,
+        }
+        return self._search(f"/api/v1/orgs/{org_id}/nac_clients/search", params)
+
+    def search_nac_events(
+        self, org_id: str, mac: Optional[str] = None, type: Optional[str] = None,
+        nacrule_id: Optional[str] = None, auth_type: Optional[str] = None,
+        duration: str = "1d", limit: int = 100,
+    ) -> List[Dict[str, Any]]:
+        """Search Access Assurance (NAC) authentication events (permits/denies/etc.)."""
+        params = {
+            "duration": duration, "limit": limit, "mac": mac, "type": type,
+            "nacrule_id": nacrule_id, "auth_type": auth_type,
+        }
+        return self._search(f"/api/v1/orgs/{org_id}/nac_clients/events/search", params)
+
     # -- writes (only permitted when read_only is False) -------------------
 
     def rename_device(self, site_id: str, device_id: str, name: str) -> Dict[str, Any]:

@@ -31,6 +31,8 @@ The HPE Networking Assistant is a read-only [Model Context Protocol (MCP)](https
 | Generate a full device inventory report (Markdown) | `generate_inventory_report` |
 | Locate a wireless client by MAC or hostname | `find_client` |
 | Trace a client's connection events to troubleshoot | `trace_client` |
+| List Access Assurance (NAC) authenticated clients | `get_nac_clients` |
+| Troubleshoot 802.1X/MAB authentication (NAC events) | `troubleshoot_authentication` |
 
 All twelve Mist global cloud regions are supported (Global, EMEA, APAC), selectable at install time.
 

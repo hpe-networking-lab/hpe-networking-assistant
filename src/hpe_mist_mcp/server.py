@@ -394,6 +394,87 @@ def tool_trace_client(
         return {"error": str(exc)}
 
 
+def _nac_client_summary(d: Dict[str, Any]) -> Dict[str, Any]:
+    return {
+        "mac": d.get("mac"),
+        "username": d.get("last_username") or d.get("username"),
+        "type": d.get("type"),
+        "auth_type": d.get("auth_type"),
+        "ssid": d.get("last_ssid") or d.get("ssid"),
+        "vlan": d.get("last_vlan") or d.get("vlan"),
+        "nac_rule": d.get("last_nacrule_name") or d.get("nacrule_name"),
+        "status": d.get("last_status") or d.get("status"),
+        "mfa": d.get("mfa"),
+        "last_seen": _fmt_ts(d.get("last_seen") or d.get("timestamp")),
+    }
+
+
+def _nac_event_summary(e: Dict[str, Any]) -> Dict[str, Any]:
+    return {
+        "time": _fmt_ts(e.get("timestamp")),
+        "type": e.get("type"),
+        "mac": e.get("mac"),
+        "username": e.get("username"),
+        "auth_type": e.get("auth_type"),
+        "nac_rule": e.get("nacrule_name") or e.get("last_nacrule_name"),
+        "ssid": e.get("ssid"),
+        "vlan": e.get("vlan"),
+        "reason": e.get("text") if e.get("text") is not None else e.get("reason"),
+    }
+
+
+def _is_auth_failure(e: Dict[str, Any]) -> bool:
+    t = str(e.get("type", "")).upper()
+    return any(k in t for k in ("DENY", "DENIED", "FAIL", "REJECT", "ERROR"))
+
+
+def tool_get_nac_clients(
+    org_id: Optional[str] = None, mac: Optional[str] = None, auth_type: Optional[str] = None,
+    type: Optional[str] = None, duration: str = "1d", **_: Any,
+) -> Dict[str, Any]:
+    """List Access Assurance (NAC) clients authenticated to the network."""
+    try:
+        oid = _resolve_org(org_id)
+        rows = client().search_nac_clients(
+            oid, mac=mac, type=type, auth_type=auth_type, duration=duration
+        )
+        return {
+            "org_id": oid,
+            "duration": duration,
+            "count": len(rows),
+            "nac_clients": [_nac_client_summary(r) for r in rows],
+        }
+    except (MistError, ValueError) as exc:
+        return {"error": str(exc)}
+
+
+def tool_troubleshoot_authentication(
+    org_id: Optional[str] = None, mac: Optional[str] = None, duration: str = "1d", **_: Any,
+) -> Dict[str, Any]:
+    """Diagnose 802.1X/MAB authentication via Access Assurance (NAC) events.
+
+    Returns the auth-event timeline, per-type counts, and highlighted failures
+    (denied/rejected/errored) so you can see why a client failed authentication.
+    """
+    try:
+        oid = _resolve_org(org_id)
+        events = client().search_nac_events(oid, mac=mac, duration=duration)
+        type_counts = Counter(e.get("type") for e in events if e.get("type"))
+        failures = [_nac_event_summary(e) for e in events if _is_auth_failure(e)]
+        return {
+            "org_id": oid,
+            "mac": mac,
+            "duration": duration,
+            "event_count": len(events),
+            "event_types": dict(type_counts),
+            "failure_count": len(failures),
+            "failures": failures[:50],
+            "events": [_nac_event_summary(e) for e in events[:100]],
+        }
+    except (MistError, ValueError) as exc:
+        return {"error": str(exc)}
+
+
 def tool_start_setup(organization: Optional[str] = None, **_: Any) -> Dict[str, Any]:
     """First-run onboarding: detect region, discover orgs/sites, validate.
 
@@ -756,6 +837,34 @@ TOOLS: Dict[str, Dict[str, Any]] = {
             **_ORG,
             "duration": {"type": "string", "description": "Lookback window, e.g. 1d, 1h, 7d (default 1d)."},
         }, required=["mac"]),
+    },
+    "get_nac_clients": {
+        "fn": tool_get_nac_clients,
+        "description": (
+            "List Access Assurance (NAC) clients authenticated to the network — user, client type "
+            "(wired/wireless), auth type (EAP-TLS/PEAP/MAB), SSID, VLAN, matched auth rule, and status. "
+            "Optional filters: mac, auth_type, type."
+        ),
+        "schema": _schema({
+            **_ORG,
+            "mac": {"type": "string", "description": "Filter by client MAC (optional)."},
+            "auth_type": {"type": "string", "description": "Filter by auth type, e.g. eap-tls, peap, mab (optional)."},
+            "type": {"type": "string", "description": "Filter by client type: wired or wireless (optional)."},
+            "duration": {"type": "string", "description": "Lookback window, e.g. 1d, 1h, 7d (default 1d)."},
+        }),
+    },
+    "troubleshoot_authentication": {
+        "fn": tool_troubleshoot_authentication,
+        "description": (
+            "Troubleshoot 802.1X/MAB authentication using Access Assurance (NAC) events: returns the "
+            "auth-event timeline, per-type counts, and highlighted failures (denied/rejected/errored). "
+            "Pass mac to focus on one client."
+        ),
+        "schema": _schema({
+            **_ORG,
+            "mac": {"type": "string", "description": "Client MAC to focus on (optional)."},
+            "duration": {"type": "string", "description": "Lookback window, e.g. 1d, 1h, 7d (default 1d)."},
+        }),
     },
 }
 
