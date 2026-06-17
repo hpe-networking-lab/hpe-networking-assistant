@@ -1,6 +1,13 @@
 # HPE Networking Assistant
 
+[![Release](https://img.shields.io/github/v/release/hpe-networking-lab/hpe-networking-assistant?sort=semver)](https://github.com/hpe-networking-lab/hpe-networking-assistant/releases/latest)
+[![CI](https://img.shields.io/github/actions/workflow/status/hpe-networking-lab/hpe-networking-assistant/ci.yml?branch=main&label=CI)](https://github.com/hpe-networking-lab/hpe-networking-assistant/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](pyproject.toml)
+
 Query your **Juniper Mist** network in natural language, directly from Claude Desktop.
+
+**➡ [Download the latest `.dxt`](https://github.com/hpe-networking-lab/hpe-networking-assistant/releases/latest)** and install it in Claude Desktop (Settings → Extensions).
 
 The HPE Networking Assistant is a read-only [Model Context Protocol (MCP)](https://modelcontextprotocol.io) server packaged as a one-click Claude Desktop extension. Network engineers can ask Claude things like *"Show all APs in my organization"* or *"Which access points are offline right now?"* and get answers pulled live from the Mist API — no manual API calls, no scripting.
 
