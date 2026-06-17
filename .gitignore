@@ -25,6 +25,10 @@ _probe_sync.txt
 run_*.bat
 *_log.txt
 
+# Office lock/temp files
+.~lock.*#
+~$*
+
 # Tooling
 .pytest_cache/
 .mypy_cache/
