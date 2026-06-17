@@ -625,6 +625,87 @@ def tool_get_wired_clients(
         return {"error": str(exc)}
 
 
+def _sle_site_summary(s: Dict[str, Any]) -> Dict[str, Any]:
+    skip = {"site_id", "num_aps", "num_clients", "org_id"}
+    metrics = {
+        k: f"{round(100 * v)}%"
+        for k, v in s.items()
+        if k not in skip and isinstance(v, (int, float))
+    }
+    return {
+        "site_id": s.get("site_id"),
+        "num_aps": s.get("num_aps"),
+        "num_clients": s.get("num_clients"),
+        "sle": metrics,
+    }
+
+
+def _port_summary(p: Dict[str, Any]) -> Dict[str, Any]:
+    neighbor = " ".join(
+        x for x in [p.get("neighbor_system_name"), p.get("neighbor_port_desc")] if x
+    ) or None
+    return {
+        "switch_mac": p.get("mac"),
+        "port": p.get("port_id"),
+        "up": p.get("up"),
+        "speed": p.get("speed"),
+        "full_duplex": p.get("full_duplex"),
+        "poe_on": p.get("poe_on"),
+        "poe_power": p.get("poe_power"),
+        "neighbor": neighbor,
+        "rx_bps": p.get("rx_bps"),
+        "tx_bps": p.get("tx_bps"),
+        "site_id": p.get("site_id"),
+    }
+
+
+def tool_get_sle(org_id: Optional[str] = None, **_: Any) -> Dict[str, Any]:
+    """Service Level Expectations (SLE) per site — Mist's user-experience scores.
+
+    Returns each site's SLE metrics (e.g. ap-health, coverage, capacity,
+    successful-connects, wan/switch/gateway health) as percentages.
+    """
+    try:
+        oid = _resolve_org(org_id)
+        c = client()
+        rows = c.get_sites_sle(oid)
+        names = {s.get("id"): s.get("name") for s in c.get_sites(oid)}
+        sites = []
+        for s in rows:
+            d = _sle_site_summary(s)
+            d["site"] = names.get(s.get("site_id"), s.get("site_id"))
+            sites.append(d)
+        return {"org_id": oid, "site_count": len(sites), "sites": sites}
+    except (MistError, ValueError) as exc:
+        return {"error": str(exc)}
+
+
+def tool_get_switch_ports(
+    org_id: Optional[str] = None, switch_mac: Optional[str] = None,
+    site_id: Optional[str] = None, up: Optional[bool] = None, **_: Any,
+) -> Dict[str, Any]:
+    """List switch/device port stats: link state, speed/duplex, PoE, neighbor, traffic.
+
+    Filter by switch_mac (the switch), site_id, or up=true/false.
+    """
+    try:
+        oid = _resolve_org(org_id)
+        norm = switch_mac.lower().replace(":", "").replace("-", "") if switch_mac else None
+        ports = client().search_switch_ports(oid, mac=norm, site_id=site_id)
+        if up is not None:
+            ports = [p for p in ports if p.get("up") is up]
+        return {
+            "org_id": oid,
+            "switch_mac": switch_mac,
+            "site_id": site_id,
+            "count": len(ports),
+            "up": sum(1 for p in ports if p.get("up") is True),
+            "ports": [_port_summary(p) for p in ports[:200]],
+        }
+    except (MistError, ValueError) as exc:
+        return {"error": str(exc)}
+
+
 def tool_start_setup(organization: Optional[str] = None, **_: Any) -> Dict[str, Any]:
     """First-run onboarding: detect region, discover orgs/sites, validate.
 
@@ -1066,6 +1147,28 @@ TOOLS: Dict[str, Dict[str, Any]] = {
             "mac": {"type": "string", "description": "Filter by client MAC (optional)."},
             "hostname": {"type": "string", "description": "Filter by hostname (optional)."},
             "duration": {"type": "string", "description": "Lookback window, e.g. 1d, 7d (default 1d)."},
+        }),
+    },
+    "get_sle": {
+        "fn": tool_get_sle,
+        "description": (
+            "Service Level Expectations (SLE) per site — Mist's user-experience scores as "
+            "percentages (e.g. ap-health, coverage, capacity, successful-connects, switch/gateway/"
+            "wan health). Use to gauge experience quality by site."
+        ),
+        "schema": _schema(_ORG),
+    },
+    "get_switch_ports": {
+        "fn": tool_get_switch_ports,
+        "description": (
+            "Switch/device port statistics: link state, speed/duplex, PoE on/off and draw, LLDP "
+            "neighbor, and traffic. Filter by switch_mac, site_id, or up (true/false)."
+        ),
+        "schema": _schema({
+            **_ORG,
+            "switch_mac": {"type": "string", "description": "Filter to one switch by MAC (optional)."},
+            "site_id": {"type": "string", "description": "Restrict to a site (optional)."},
+            "up": {"type": "boolean", "description": "Filter to up (true) or down (false) ports (optional)."},
         }),
     },
 }

@@ -39,6 +39,8 @@ def test_tools_list_has_read_tools_and_setup():
         "get_marvis_actions",
         "get_alarms",
         "get_wired_clients",
+        "get_sle",
+        "get_switch_ports",
     }
     for tool in res["tools"]:
         assert tool["inputSchema"]["type"] == "object"

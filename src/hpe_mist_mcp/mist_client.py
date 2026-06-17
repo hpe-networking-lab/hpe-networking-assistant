@@ -317,6 +317,31 @@ class MistClient:
         params = {"duration": duration, "limit": limit, "severity": severity}
         return self._search(f"/api/v1/orgs/{org_id}/alarms/search", params)
 
+    def _list_from(self, data: Any) -> List[Dict[str, Any]]:
+        """Extract a result list from a Mist response (``results`` or ``data`` key)."""
+        if isinstance(data, dict):
+            for key in ("results", "data"):
+                if isinstance(data.get(key), list):
+                    return data[key]
+            return []
+        return data if isinstance(data, list) else []
+
+    def get_sites_sle(self, org_id: str) -> List[Dict[str, Any]]:
+        """Return per-site Service Level Expectation (SLE) scores for the org.
+
+        NOTE: best-known path /orgs/:org_id/insights/sites-sle; confirm against
+        your tenant if your account exposes SLE under a different path.
+        """
+        return self._list_from(self._request(f"/api/v1/orgs/{org_id}/insights/sites-sle"))
+
+    def search_switch_ports(
+        self, org_id: str, mac: Optional[str] = None, site_id: Optional[str] = None,
+        limit: int = 1000,
+    ) -> List[Dict[str, Any]]:
+        """Return switch/device port statistics across the org (single page)."""
+        params = {"limit": limit, "mac": mac, "site_id": site_id}
+        return self._list_from(self._request(f"/api/v1/orgs/{org_id}/stats/ports/search", params))
+
     def get_marvis_actions(self, org_id: str) -> List[Dict[str, Any]]:
         """Return Marvis (AI) suggested actions for the org.
 

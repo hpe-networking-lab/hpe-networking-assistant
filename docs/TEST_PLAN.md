@@ -50,7 +50,7 @@ Run from a clone of the repo. Validates all tools/visualizers offline.
 | # | Step | Command | Expected | Result |
 | --- | --- | --- | --- | --- |
 | A1 | Clone + install | `pip install -e ".[dev]"` | Installs with no errors | |
-| A2 | Run tests | `pytest -q` | **74 passed** | |
+| A2 | Run tests | `pytest -q` | **79 passed** | |
 | A3 | Byte-compile | `python -m compileall src server` | No errors | |
 | A4 | Validate manifest | `python -c "import json;json.load(open('manifest.json'))"` | No error | |
 
@@ -112,6 +112,8 @@ Use natural-language prompts; verify Claude calls the right tool and returns sen
 | RO-10 | `get_wired_clients` | "List wired clients / what's on switch port X?" | Wired clients with switch MAC, port, VLAN, IP, vendor | |
 | RO-11 | `get_marvis_actions` | "What's wrong with my network?" | Marvis suggested actions + fixes, per-category counts; `status=open` filters to active | |
 | RO-12 | `get_alarms` | "Show critical alarms in the last day." | Alarms with per-severity/per-type counts | |
+| RO-13 | `get_sle` | "How's the user experience by site?" | Per-site SLE metrics as percentages | |
+| RO-14 | `get_switch_ports` | "Show ports on switch <mac> / down ports" | Port link/speed/PoE/neighbor; filters by switch/site/up | |
 
 ---
 
@@ -232,7 +234,7 @@ Use natural-language prompts; verify Claude calls the right tool and returns sen
 | SC-2 | Whole install + first query takes **under 10 minutes** | |
 | SC-3 | Customer never needs to know Org ID, Site ID, or API endpoint | |
 | SC-4 | Read-only by default; write mode is opt-in and confirmation-gated | |
-| SC-5 | Automated suite: **74 passed** | |
+| SC-5 | Automated suite: **79 passed** | |
 
 ---
 

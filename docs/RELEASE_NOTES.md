@@ -3,6 +3,16 @@
 All notable changes to the HPE Networking Assistant are documented here.
 This project adheres to [Semantic Versioning](https://semver.org).
 
+## [1.10.0] — SLE scores & switch port stats
+
+### Added
+- **`get_sle`** — per-site Service Level Expectations (Mist's user-experience scores) as percentages: AP health, coverage, capacity, successful-connects, and switch/gateway/WAN health where applicable.
+- **`get_switch_ports`** — switch/device port statistics: link state, speed/duplex, PoE on/off and draw, LLDP neighbor, and traffic. Filter by `switch_mac`, `site_id`, or `up`.
+
+### Notes
+- Both read-only.
+- The SLE endpoint path (`/orgs/:org_id/insights/sites-sle`) is the best-known path; confirm against your tenant.
+
 ## [1.9.0] — Marvis Actions, alarms & wired visibility
 
 ### Added
