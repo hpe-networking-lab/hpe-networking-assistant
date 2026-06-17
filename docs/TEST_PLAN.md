@@ -50,7 +50,7 @@ Run from a clone of the repo. Validates all tools/visualizers offline.
 | # | Step | Command | Expected | Result |
 | --- | --- | --- | --- | --- |
 | A1 | Clone + install | `pip install -e ".[dev]"` | Installs with no errors | |
-| A2 | Run tests | `pytest -q` | **82 passed** | |
+| A2 | Run tests | `pytest -q` | **87 passed** | |
 | A3 | Byte-compile | `python -m compileall src server` | No errors | |
 | A4 | Validate manifest | `python -c "import json;json.load(open('manifest.json'))"` | No error | |
 
@@ -115,6 +115,8 @@ Use natural-language prompts; verify Claude calls the right tool and returns sen
 | RO-13 | `get_sle` | "How's the user experience by site?" | Per-site SLE metrics as percentages | |
 | RO-14 | `get_switch_ports` | "Show ports on switch <mac> / down ports" | Port link/speed/PoE/neighbor; filters by switch/site/up | |
 | RO-15 | `export_org_config` | "Back up my org config to a file." | JSON bundle (org + sites/networks/templates/WLANs/NAC/…) with per-type counts; saved as .json | |
+| RO-16 | `set_active_org` | "Use the <name> organization." (multi-org token) | Active org set by name; later tools target it | |
+| RO-17 | `diff_org_config` | "Compare current config to last week's backup." | Added/removed/changed per resource type; "no drift" when identical | |
 
 ---
 
@@ -235,7 +237,7 @@ Use natural-language prompts; verify Claude calls the right tool and returns sen
 | SC-2 | Whole install + first query takes **under 10 minutes** | |
 | SC-3 | Customer never needs to know Org ID, Site ID, or API endpoint | |
 | SC-4 | Read-only by default; write mode is opt-in and confirmation-gated | |
-| SC-5 | Automated suite: **82 passed** | |
+| SC-5 | Automated suite: **87 passed** | |
 
 ---
 

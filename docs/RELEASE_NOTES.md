@@ -3,6 +3,15 @@
 All notable changes to the HPE Networking Assistant are documented here.
 This project adheres to [Semantic Versioning](https://semver.org).
 
+## [1.12.0] — Multi-org & config drift
+
+### Added
+- **`set_active_org`** — choose the session's default organization by **name or id**. For tokens that span multiple orgs, set it once and subsequent tools target that org. Any tool's `org_id` argument now also accepts an organization **name** (resolved automatically).
+- **`diff_org_config`** — compare the current org configuration against a saved `export_org_config` backup file and report **added / removed / changed** objects per resource type (config drift detection). Read-only.
+
+### Notes
+- Both read-only. `diff_org_config` reads a local JSON backup file path you provide.
+
 ## [1.11.0] — Org configuration backup
 
 ### Added

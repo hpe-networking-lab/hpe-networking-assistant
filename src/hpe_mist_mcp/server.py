@@ -127,10 +127,33 @@ def _org_name(org_id: str) -> Optional[str]:
         return None
 
 
+def _looks_like_uuid(value: str) -> bool:
+    return isinstance(value, str) and len(value) == 36 and value.count("-") == 4
+
+
+def _find_org_by_name(value: str) -> Optional[str]:
+    """Resolve an organization name (exact, else unique substring) to its id."""
+    try:
+        orgs = client().get_organizations()
+    except MistError:
+        return None
+    v = value.strip().lower()
+    exact = [o for o in orgs if (o.get("name") or "").lower() == v]
+    if exact:
+        return exact[0]["org_id"]
+    partial = [o for o in orgs if v in (o.get("name") or "").lower()]
+    return partial[0]["org_id"] if len(partial) == 1 else None
+
+
 def _resolve_org(org_id: Optional[str]) -> str:
-    """Resolve an org id from the argument, configuration, or single-org access."""
+    """Resolve an org id from the argument, configuration, or single-org access.
+
+    The argument may be an org id or an organization name (resolved by name).
+    """
     if org_id:
-        return org_id
+        if _looks_like_uuid(org_id):
+            return org_id
+        return _find_org_by_name(org_id) or org_id
     if _config.org_id:
         return _config.org_id
     orgs = client().get_organizations()
@@ -706,6 +729,96 @@ def tool_get_switch_ports(
         return {"error": str(exc)}
 
 
+def tool_set_active_org(org: str, **_: Any) -> Dict[str, Any]:
+    """Set the default organization for this session by name or id (multi-org tokens)."""
+    try:
+        if not org:
+            return {"error": "Provide an organization name or id."}
+        orgs = client().get_organizations()
+        if _looks_like_uuid(org):
+            oid = org
+            name = next((o.get("name") for o in orgs if o.get("org_id") == org), None)
+        else:
+            v = org.strip().lower()
+            matches = [o for o in orgs if (o.get("name") or "").lower() == v] \
+                or [o for o in orgs if v in (o.get("name") or "").lower()]
+            if not matches:
+                return {"error": f"No organization matches '{org}'.",
+                        "organizations": [o.get("name") for o in orgs]}
+            if len(matches) > 1:
+                return {"error": f"Multiple organizations match '{org}'; be more specific.",
+                        "organizations": [o.get("name") for o in matches]}
+            oid, name = matches[0]["org_id"], matches[0].get("name")
+        _config.org_id = oid
+        try:
+            save_discovery(org_id=oid)
+        except Exception:
+            log.warning("Could not persist active org", exc_info=True)
+        return {"active_org_id": oid, "active_org": name,
+                "message": f"Active organization set to {name or oid}."}
+    except (MistError, ValueError) as exc:
+        return {"error": str(exc)}
+
+
+def _index_by_id(items: Any) -> Dict[str, Dict[str, Any]]:
+    out: Dict[str, Dict[str, Any]] = {}
+    if isinstance(items, list):
+        for it in items:
+            if isinstance(it, dict) and it.get("id"):
+                out[it["id"]] = it
+    return out
+
+
+def tool_diff_org_config(baseline_file: str, org_id: Optional[str] = None, **_: Any) -> Dict[str, Any]:
+    """Compare the current org configuration to a saved backup (config drift).
+
+    baseline_file is a path to a JSON file previously produced by
+    export_org_config. Reports added / removed / changed objects per resource type.
+    """
+    try:
+        try:
+            with open(baseline_file, encoding="utf-8") as f:
+                loaded = json.load(f)
+        except OSError as exc:
+            return {"error": f"Could not read baseline file: {exc}"}
+        except json.JSONDecodeError as exc:
+            return {"error": f"Baseline is not valid JSON: {exc}"}
+
+        base = loaded.get("config") if isinstance(loaded, dict) and "config" in loaded else loaded
+        base_res = (base or {}).get("resources", {}) if isinstance(base, dict) else {}
+
+        oid = _resolve_org(org_id)
+        current = client().export_org_config(oid)
+        cur_res = current.get("resources", {})
+
+        changes: Dict[str, Any] = {}
+        for rtype in sorted(set(base_res) | set(cur_res)):
+            b = _index_by_id(base_res.get(rtype))
+            c = _index_by_id(cur_res.get(rtype))
+            disp = lambda d, i: (d[i].get("name") or i)
+            added = [disp(c, i) for i in c if i not in b]
+            removed = [disp(b, i) for i in b if i not in c]
+            changed = [
+                disp(c, i) for i in c if i in b
+                and json.dumps(b[i], sort_keys=True, default=str)
+                != json.dumps(c[i], sort_keys=True, default=str)
+            ]
+            if added or removed or changed:
+                changes[rtype] = {"added": added, "removed": removed, "changed": changed}
+
+        total = sum(len(v["added"]) + len(v["removed"]) + len(v["changed"]) for v in changes.values())
+        return {
+            "org_id": oid,
+            "baseline_file": baseline_file,
+            "total_changes": total,
+            "changes": changes,
+            "message": "No configuration drift." if total == 0
+            else f"{total} configuration change(s) since the baseline.",
+        }
+    except (MistError, ValueError) as exc:
+        return {"error": str(exc)}
+
+
 def tool_export_org_config(org_id: Optional[str] = None, **_: Any) -> Dict[str, Any]:
     """Export a read-only backup of the organization's configuration as JSON.
 
@@ -1204,6 +1317,32 @@ TOOLS: Dict[str, Dict[str, Any]] = {
             "a .json file. Secrets are excluded/masked."
         ),
         "schema": _schema(_ORG),
+    },
+    "set_active_org": {
+        "fn": tool_set_active_org,
+        "description": (
+            "Set the default organization for this session by name or id. Useful when the token "
+            "can access several organizations — subsequent tools then target the chosen org."
+        ),
+        "schema": _schema(
+            {"org": {"type": "string", "description": "Organization name or id."}},
+            required=["org"],
+        ),
+    },
+    "diff_org_config": {
+        "fn": tool_diff_org_config,
+        "description": (
+            "Compare the current org configuration against a saved backup file (config drift): "
+            "reports added, removed, and changed objects per resource type. baseline_file is a "
+            "path to a JSON file previously produced by export_org_config."
+        ),
+        "schema": _schema(
+            {
+                "baseline_file": {"type": "string", "description": "Path to a saved export_org_config JSON file."},
+                **_ORG,
+            },
+            required=["baseline_file"],
+        ),
     },
 }
 
