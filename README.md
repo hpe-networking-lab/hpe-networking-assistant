@@ -33,6 +33,7 @@ The HPE Networking Assistant is a read-only [Model Context Protocol (MCP)](https
 | Trace a client's connection events to troubleshoot | `trace_client` |
 | List Access Assurance (NAC) authenticated clients | `get_nac_clients` |
 | Troubleshoot 802.1X/MAB authentication (NAC events) | `troubleshoot_authentication` |
+| Build an HTML Access Assurance (NAC) dashboard | `generate_nac_dashboard` |
 
 All twelve Mist global cloud regions are supported (Global, EMEA, APAC), selectable at install time.
 
@@ -120,7 +121,7 @@ The packaged extension stores your API token in the OS keychain (macOS Keychain 
 
 ## Roadmap
 
-**Phase 2** (in progress): report generation (v1.4.0) and client trace/troubleshooting (v1.5.0, `find_client`, `trace_client`) shipped. Still planned: Access Assurance and authentication troubleshooting, and NAC Visualizer integration. See [`docs/RELEASE_NOTES.md`](docs/RELEASE_NOTES.md).
+**Phase 2** (complete as of v1.7.0): report generation (v1.4.0), client trace/troubleshooting (v1.5.0), Access Assurance & auth troubleshooting (v1.6.0), and the NAC Visualizer HTML dashboard (v1.7.0). See [`docs/RELEASE_NOTES.md`](docs/RELEASE_NOTES.md).
 
 ---
 

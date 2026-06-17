@@ -35,6 +35,7 @@ def test_tools_list_has_read_tools_and_setup():
         "trace_client",
         "get_nac_clients",
         "troubleshoot_authentication",
+        "generate_nac_dashboard",
     }
     for tool in res["tools"]:
         assert tool["inputSchema"]["type"] == "object"

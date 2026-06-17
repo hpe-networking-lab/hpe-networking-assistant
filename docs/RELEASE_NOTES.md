@@ -3,6 +3,16 @@
 All notable changes to the HPE Networking Assistant are documented here.
 This project adheres to [Semantic Versioning](https://semver.org).
 
+## [1.7.0] — NAC Visualizer (Phase 2 complete)
+
+### Added
+- **`generate_nac_dashboard`** — builds a self-contained HTML Access Assurance dashboard: summary cards (clients, auth events, failures, success rate) and bar charts for authentication types, client types, status, event types, and the top failing users and auth rules. No external dependencies — charts are inline CSS, so the saved `.html` opens anywhere offline.
+- `nac_visualizer.py` module that aggregates NAC clients/events and renders the dashboard HTML.
+
+### Notes
+- Read-only; reuses the NAC search added in 1.6.0.
+- This completes the originally planned Phase 2 scope (report generation, client trace, Access Assurance/auth troubleshooting, and NAC Visualizer).
+
 ## [1.6.0] — Access Assurance & auth troubleshooting (Phase 2)
 
 ### Added

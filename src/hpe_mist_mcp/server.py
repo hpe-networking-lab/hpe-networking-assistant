@@ -22,6 +22,7 @@ from . import __version__
 from .config import load_config, save_discovery
 from .discovery import discover_region, region_label
 from .mist_client import MistClient, MistError
+from .nac_visualizer import build_nac_overview, render_nac_dashboard_html
 from .reports import (
     build_health_report,
     build_inventory_report,
@@ -475,6 +476,32 @@ def tool_troubleshoot_authentication(
         return {"error": str(exc)}
 
 
+def tool_generate_nac_dashboard(
+    org_id: Optional[str] = None, duration: str = "1d", **_: Any,
+) -> Dict[str, Any]:
+    """Build a self-contained HTML NAC (Access Assurance) dashboard for an org.
+
+    Aggregates NAC clients and auth events into charts (auth types, client types,
+    status, event types, top failing users/rules). Returns HTML the user can save
+    as a .html file and open in a browser.
+    """
+    try:
+        oid = _resolve_org(org_id)
+        data = build_nac_overview(client(), oid, org_name=_org_name(oid), duration=duration)
+        return {
+            "format": "html",
+            "generated_at": data["generated_at"],
+            "summary": {
+                "clients": data["client_count"],
+                "events": data["event_count"],
+                "failures": data["failure_count"],
+            },
+            "html": render_nac_dashboard_html(data),
+        }
+    except (MistError, ValueError) as exc:
+        return {"error": str(exc)}
+
+
 def tool_start_setup(organization: Optional[str] = None, **_: Any) -> Dict[str, Any]:
     """First-run onboarding: detect region, discover orgs/sites, validate.
 
@@ -863,6 +890,18 @@ TOOLS: Dict[str, Dict[str, Any]] = {
         "schema": _schema({
             **_ORG,
             "mac": {"type": "string", "description": "Client MAC to focus on (optional)."},
+            "duration": {"type": "string", "description": "Lookback window, e.g. 1d, 1h, 7d (default 1d)."},
+        }),
+    },
+    "generate_nac_dashboard": {
+        "fn": tool_generate_nac_dashboard,
+        "description": (
+            "Build a self-contained HTML Access Assurance (NAC) dashboard: summary cards and bar "
+            "charts for auth types, client types, status, event types, and top failing users/rules. "
+            "Returns HTML the user can save as a .html file and open in a browser."
+        ),
+        "schema": _schema({
+            **_ORG,
             "duration": {"type": "string", "description": "Lookback window, e.g. 1d, 1h, 7d (default 1d)."},
         }),
     },
