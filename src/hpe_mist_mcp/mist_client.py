@@ -243,6 +243,35 @@ class MistClient:
         return clients
 
 
+    # -- search / troubleshooting -----------------------------------------
+
+    def _search(self, path: str, params: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
+        """Call a Mist search endpoint and return its ``results`` list."""
+        data = self._request(path, params)
+        if isinstance(data, dict):
+            results = data.get("results")
+            return results if isinstance(results, list) else []
+        return data if isinstance(data, list) else []
+
+    def search_clients(
+        self, org_id: str, mac: Optional[str] = None, hostname: Optional[str] = None,
+        duration: str = "1d", limit: int = 100,
+    ) -> List[Dict[str, Any]]:
+        """Search wireless clients across an org by MAC and/or hostname."""
+        params: Dict[str, Any] = {"duration": duration, "limit": limit}
+        if mac:
+            params["mac"] = mac
+        if hostname:
+            params["hostname"] = hostname
+        return self._search(f"/api/v1/orgs/{org_id}/clients/search", params)
+
+    def search_client_events(
+        self, org_id: str, mac: str, duration: str = "1d", limit: int = 100,
+    ) -> List[Dict[str, Any]]:
+        """Return recent wireless client events (assoc/auth/dhcp/roam/etc.) for a MAC."""
+        params = {"mac": mac, "duration": duration, "limit": limit}
+        return self._search(f"/api/v1/orgs/{org_id}/clients/events/search", params)
+
     # -- writes (only permitted when read_only is False) -------------------
 
     def rename_device(self, site_id: str, device_id: str, name: str) -> Dict[str, Any]:

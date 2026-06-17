@@ -3,6 +3,16 @@
 All notable changes to the HPE Networking Assistant are documented here.
 This project adheres to [Semantic Versioning](https://semver.org).
 
+## [1.5.0] — Client trace & troubleshooting (Phase 2)
+
+### Added
+- **`find_client`** — locate a wireless client by MAC or hostname: which site, AP, and SSID it's on, plus IP, band, and signal (RSSI). Searches across the org.
+- **`trace_client`** — pull a client's recent connection events (association, auth, DHCP, roam, disconnect) over a chosen window (`duration`, default 1d). Returns an event timeline, per-type counts, and highlighted failures to diagnose why a client can't connect or roams poorly.
+- Mist client gained search support (`/clients/search` and `/clients/events/search`) with a `results`-aware helper.
+
+### Notes
+- Both tools are read-only.
+
 ## [1.4.0] — Report generation (Phase 2)
 
 **First Phase 2 capability: on-demand reports.**

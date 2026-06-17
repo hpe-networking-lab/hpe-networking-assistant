@@ -14,6 +14,8 @@ from __future__ import annotations
 import json
 import logging
 import sys
+from collections import Counter
+from datetime import datetime, timezone
 from typing import Any, Dict, Optional
 
 from . import __version__
@@ -303,6 +305,90 @@ def tool_generate_inventory_report(org_id: Optional[str] = None, **_: Any) -> Di
             "generated_at": data["generated_at"],
             "device_count": data["device_count"],
             "markdown": render_inventory_markdown(data),
+        }
+    except (MistError, ValueError) as exc:
+        return {"error": str(exc)}
+
+
+def _fmt_ts(ts: Any) -> Any:
+    """Format an epoch timestamp as readable UTC; pass through if not numeric."""
+    try:
+        return datetime.fromtimestamp(float(ts), tz=timezone.utc).strftime("%Y-%m-%d %H:%M:%SZ")
+    except (TypeError, ValueError):
+        return ts
+
+
+def _client_search_summary(r: Dict[str, Any], sites: Dict[Any, Any]) -> Dict[str, Any]:
+    return {
+        "mac": r.get("mac"),
+        "hostname": r.get("hostname"),
+        "username": r.get("username"),
+        "ssid": r.get("ssid"),
+        "ap_mac": r.get("ap") or r.get("last_ap"),
+        "ip": r.get("ip"),
+        "band": r.get("band"),
+        "rssi": r.get("rssi"),
+        "site": sites.get(r.get("site_id"), r.get("site_id")),
+        "last_seen": _fmt_ts(r.get("last_seen") or r.get("timestamp")),
+    }
+
+
+def _event_summary(e: Dict[str, Any]) -> Dict[str, Any]:
+    return {
+        "time": _fmt_ts(e.get("timestamp")),
+        "type": e.get("type"),
+        "ssid": e.get("ssid"),
+        "ap": e.get("ap"),
+        "band": e.get("band"),
+        "rssi": e.get("rssi"),
+        "wlan_id": e.get("wlan_id"),
+        "reason": e.get("reason") if e.get("reason") is not None else e.get("text"),
+    }
+
+
+def tool_find_client(
+    mac: Optional[str] = None, hostname: Optional[str] = None,
+    org_id: Optional[str] = None, duration: str = "1d", **_: Any,
+) -> Dict[str, Any]:
+    """Locate a wireless client by MAC or hostname (which site/AP/SSID, IP, signal)."""
+    try:
+        if not mac and not hostname:
+            return {"error": "Provide a mac or hostname to search for."}
+        oid = _resolve_org(org_id)
+        c = client()
+        results = c.search_clients(oid, mac=mac, hostname=hostname, duration=duration)
+        sites = {s.get("id"): s.get("name") for s in c.get_sites(oid)}
+        return {
+            "org_id": oid,
+            "query": {"mac": mac, "hostname": hostname, "duration": duration},
+            "count": len(results),
+            "clients": [_client_search_summary(r, sites) for r in results],
+        }
+    except (MistError, ValueError) as exc:
+        return {"error": str(exc)}
+
+
+def tool_trace_client(
+    mac: str, org_id: Optional[str] = None, duration: str = "1d", **_: Any,
+) -> Dict[str, Any]:
+    """Trace a client's recent connection events to troubleshoot connectivity/roaming."""
+    try:
+        oid = _resolve_org(org_id)
+        events = client().search_client_events(oid, mac, duration=duration)
+        type_counts = Counter(e.get("type") for e in events if e.get("type"))
+        failures = [
+            _event_summary(e) for e in events
+            if "fail" in str(e.get("type", "")).lower()
+            or e.get("reason") not in (None, "", 0)
+        ]
+        return {
+            "org_id": oid,
+            "mac": mac,
+            "duration": duration,
+            "event_count": len(events),
+            "event_types": dict(type_counts),
+            "failures": failures[:50],
+            "events": [_event_summary(e) for e in events[:100]],
         }
     except (MistError, ValueError) as exc:
         return {"error": str(exc)}
@@ -644,6 +730,32 @@ TOOLS: Dict[str, Dict[str, Any]] = {
             "model, serial, MAC, site, status, and firmware version)."
         ),
         "schema": _schema(_ORG),
+    },
+    "find_client": {
+        "fn": tool_find_client,
+        "description": (
+            "Locate a wireless client by MAC address or hostname: which site, AP, and SSID it is "
+            "on, plus IP, band, and signal. Provide mac or hostname."
+        ),
+        "schema": _schema({
+            "mac": {"type": "string", "description": "Client MAC address."},
+            "hostname": {"type": "string", "description": "Client hostname."},
+            **_ORG,
+            "duration": {"type": "string", "description": "Lookback window, e.g. 1d, 1h, 7d (default 1d)."},
+        }),
+    },
+    "trace_client": {
+        "fn": tool_trace_client,
+        "description": (
+            "Trace a wireless client's recent connection events (association, auth, DHCP, roam, "
+            "disconnect) to troubleshoot why it can't connect or roams poorly. Returns an event "
+            "timeline, type counts, and highlighted failures."
+        ),
+        "schema": _schema({
+            "mac": {"type": "string", "description": "Client MAC address."},
+            **_ORG,
+            "duration": {"type": "string", "description": "Lookback window, e.g. 1d, 1h, 7d (default 1d)."},
+        }, required=["mac"]),
     },
 }
 
