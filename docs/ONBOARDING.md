@@ -41,6 +41,31 @@ You never need to enter or look up a region, Org ID, Site ID, or API endpoint.
 - "What sites do we have and where are they?"
 - "What's the org ID for Acme?"
 
+## 3a. Phase 2 — reports, troubleshooting, and dashboards
+
+**Reports** (Claude returns Markdown you can save as `.md` or convert to PDF/Word)
+- "Generate a network health report for my organization."
+- "Create an inventory report of all my APs and switches and save it as a file."
+
+**Client trace / troubleshooting**
+- "Find the client with MAC aa:bb:cc:dd:ee:ff." / "Where is hostname *Davids-Laptop*?"
+- "Trace client aa:bb:cc:dd:ee:ff over the last hour — why does it keep dropping?"
+- "Show this client's connection events for the past day."
+
+**Access Assurance (NAC)**
+- "List the NAC clients authenticated in the last day."
+- "Show only EAP-TLS NAC clients." / "Show wired MAB clients."
+- "Troubleshoot authentication failures in the last 24 hours."
+- "Why is user bob@corp failing 802.1X? Trace their auth events." (pass the MAC)
+
+**NAC dashboard**
+- "Build a NAC dashboard for my org and save it as an HTML file I can open."
+
+Tips: most tools accept a `duration` like `1h`, `1d`, or `7d`. For client/auth
+troubleshooting, give Claude the MAC address when you have it — it focuses the
+results. Report and dashboard tools return Markdown/HTML; just ask Claude to
+"save that as a file" and it will drop it in your folder.
+
 ## 4. Working across multiple organizations
 
 If your token can access more than one organization, either:
