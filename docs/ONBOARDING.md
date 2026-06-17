@@ -61,6 +61,8 @@ You never need to enter or look up a region, Org ID, Site ID, or API endpoint.
 **NAC dashboard**
 - "Build a NAC dashboard for my org and save it as an HTML file I can open."
 
+**Live dashboards (Claude Cowork).** Separate from the extension, two live connector-backed views are available: a **Mist Network & Access Assurance dashboard** that auto-refreshes every 30s, and a **NAC Auth Debugger** where you type a username or MAC to isolate that identity's auth events and decode the most recent failure.
+
 Tips: most tools accept a `duration` like `1h`, `1d`, or `7d`. For client/auth
 troubleshooting, give Claude the MAC address when you have it — it focuses the
 results. Report and dashboard tools return Markdown/HTML; just ask Claude to

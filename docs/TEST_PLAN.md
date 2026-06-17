@@ -2,11 +2,12 @@
 
 End-to-end acceptance test plan covering the **installation process** and **every tool and visualizer**. Written to be executed on a single Windows PC acting as the test client.
 
-- **Product version under test:** 1.7.0
+- **Product version under test:** 1.8.0
 - **Repository:** https://github.com/hpe-networking-lab/hpe-networking-assistant
 - **Two test layers:**
   1. **Automated** — the `pytest` suite (65 tests) validates all tool logic with a mocked Mist API; no token or network required.
   2. **Manual acceptance** — live tests against a real Mist tenant through Claude Desktop, below.
+  3. **Companion dashboards** — two live Cowork artifacts (Section 9a), separate from the packaged `.dxt`.
 
 Mark each case **PASS / FAIL** in the result column and capture notes/screenshots for failures.
 
@@ -49,7 +50,7 @@ Run from a clone of the repo. Validates all tools/visualizers offline.
 | # | Step | Command | Expected | Result |
 | --- | --- | --- | --- | --- |
 | A1 | Clone + install | `pip install -e ".[dev]"` | Installs with no errors | |
-| A2 | Run tests | `pytest -q` | **65 passed** | |
+| A2 | Run tests | `pytest -q` | **66 passed** | |
 | A3 | Byte-compile | `python -m compileall src server` | No errors | |
 | A4 | Validate manifest | `python -c "import json;json.load(open('manifest.json'))"` | No error | |
 
@@ -136,7 +137,8 @@ Use natural-language prompts; verify Claude calls the right tool and returns sen
 | AA-1 | `get_nac_clients` | "List NAC clients from the last day." | Authenticated NAC clients (user, type, auth type, SSID, VLAN, rule, status) — _empty if Access Assurance not configured_ | |
 | AA-2 | Filter | "Show only EAP-TLS NAC clients." | Filtered list | |
 | AA-3 | `troubleshoot_authentication` | "Troubleshoot authentication failures in the last 24 hours." | Event timeline, type counts, failure highlights | |
-| AA-4 | Focus by client | "Why is <mac> failing authentication?" | Events scoped to that MAC | |
+| AA-4 | Focus by client (MAC) | "Why is <mac> failing authentication?" | Events scoped to that MAC | |
+| AA-5 | Focus by user (`user`) | "Why is bob@corp failing 802.1X?" | Events scoped to that username/cert CN (free-text), failures highlighted | |
 
 > **Note:** AA tests require a tenant with **Access Assurance (NAC)** enabled. If your tenant has no NAC, expect empty results (not an error). Confirm the NAC events endpoint path against your tenant (see Release Notes 1.6.0).
 
@@ -150,6 +152,23 @@ Use natural-language prompts; verify Claude calls the right tool and returns sen
 | NAC-2 | Open offline | Double-click the `.html` | Opens in browser; cards + bar charts render with **no internet** | |
 | NAC-3 | Content | Inspect | Cards (clients, events, failures, success rate) + charts for auth types, client types, status, event types, top failing users/rules | |
 | NAC-4 | Empty-state | (No-NAC tenant) | Renders with zeros / "No data" rather than erroring | |
+
+---
+
+## 9a. Companion Cowork dashboards (TC-CD)
+
+> Live, connector-backed dashboards in Claude Cowork, separate from the packaged extension. They require the Mist connector to be connected in Cowork.
+
+| # | Objective | Action | Expected | Result |
+| --- | --- | --- | --- | --- |
+| CD-1 | Open network/NAC dashboard | Open the "Mist Network & Access Assurance" artifact | Device-status doughnut + cards load from live data | |
+| CD-2 | Auto-refresh | Leave it open ~1 min | Updates on its own (~30s cadence); "last updated" time advances; pulsing live dot | |
+| CD-3 | NAC empty-state | (No-NAC tenant) | Shows "Access Assurance may not be configured" rather than erroring | |
+| CD-4 | Open NAC Auth Debugger | Open the "NAC Auth Debugger" artifact | Loads with input + time-window controls | |
+| CD-5 | Debug by username | Type a username, choose a window, click Debug | Pulls that identity's NAC events; pass/fail counts; timeline | |
+| CD-6 | Debug by MAC | Enter a 12-hex MAC | Auto-routes to MAC filter; events returned | |
+| CD-7 | Failure decode | (Identity with a failure) | "Most recent failure" card shows reason, matched rule, auth type, NAS | |
+| CD-8 | Explain hand-off | Click "Ask Claude to explain and suggest a fix" | Failure detail is sent to chat as a prompt | |
 
 ---
 
@@ -210,7 +229,7 @@ Use natural-language prompts; verify Claude calls the right tool and returns sen
 | SC-2 | Whole install + first query takes **under 10 minutes** | |
 | SC-3 | Customer never needs to know Org ID, Site ID, or API endpoint | |
 | SC-4 | Read-only by default; write mode is opt-in and confirmation-gated | |
-| SC-5 | Automated suite: **65 passed** | |
+| SC-5 | Automated suite: **66 passed** | |
 
 ---
 

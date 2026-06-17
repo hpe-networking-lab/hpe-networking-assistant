@@ -32,10 +32,17 @@ The HPE Networking Assistant is a read-only [Model Context Protocol (MCP)](https
 | Locate a wireless client by MAC or hostname | `find_client` |
 | Trace a client's connection events to troubleshoot | `trace_client` |
 | List Access Assurance (NAC) authenticated clients | `get_nac_clients` |
-| Troubleshoot 802.1X/MAB authentication (NAC events) | `troubleshoot_authentication` |
+| Troubleshoot 802.1X/MAB authentication by MAC **or** username/cert CN (NAC events) | `troubleshoot_authentication` |
 | Build an HTML Access Assurance (NAC) dashboard | `generate_nac_dashboard` |
 
-All twelve Mist global cloud regions are supported (Global, EMEA, APAC), selectable at install time.
+All twelve Mist global cloud regions are supported (Global, EMEA, APAC), auto-detected from your token.
+
+### Companion live dashboards (Cowork)
+
+In addition to the packaged extension tools, two live, connector-backed dashboards are available in Claude Cowork (separate from the `.dxt`):
+
+- **Mist Network & Access Assurance dashboard** — device health and NAC charts that auto-refresh every 30s.
+- **NAC Auth Debugger** — type a username or MAC to isolate that identity's authentication events, decode the most recent failure, and hand the detail to Claude for a fix suggestion.
 
 ### Write mode (opt-in)
 
@@ -110,10 +117,12 @@ pytest
 Claude Desktop  ⇄  MCP (stdio)  ⇄  hpe_mist_mcp.server  ⇄  Mist REST API (HTTPS, GET only)
 ```
 
-- `mist_client.py` — dependency-free Mist API client (standard library only).
-- `server.py` — MCP server implementing the JSON-RPC stdio transport with the standard library only (no third-party packages), exposing the six read-only tools.
+- `mist_client.py` — dependency-free Mist API client (standard library only): inventory, clients, search, NAC, and guarded writes.
+- `server.py` — MCP server implementing the JSON-RPC stdio transport with the standard library only (no third-party packages), exposing the read-only tools plus the opt-in write tools.
 - `config.py` — resolves the token/region/org from environment variables (injected by the extension) or a local config file (written by the setup wizard).
+- `discovery.py` — automatic Mist region detection from the token.
 - `setup_wizard.py` / `validation.py` — guided onboarding and a health check that emits **READY FOR USE** or **REQUIRES ATTENTION**.
+- `reports.py` / `nac_visualizer.py` — Markdown reports and the self-contained HTML NAC dashboard.
 
 The packaged extension stores your API token in the OS keychain (macOS Keychain / Windows Credential Manager) and passes it to the server via the `MIST_API_TOKEN` environment variable.
 
@@ -121,7 +130,7 @@ The packaged extension stores your API token in the OS keychain (macOS Keychain 
 
 ## Roadmap
 
-**Phase 2** (complete as of v1.7.0): report generation (v1.4.0), client trace/troubleshooting (v1.5.0), Access Assurance & auth troubleshooting (v1.6.0), and the NAC Visualizer HTML dashboard (v1.7.0). See [`docs/RELEASE_NOTES.md`](docs/RELEASE_NOTES.md).
+**Phase 2 is complete.** Report generation (v1.4.0), client trace/troubleshooting (v1.5.0), Access Assurance & auth troubleshooting (v1.6.0), the NAC Visualizer HTML dashboard (v1.7.0), and per-user auth debugging (v1.8.0). Full history in [`docs/RELEASE_NOTES.md`](docs/RELEASE_NOTES.md).
 
 ---
 
