@@ -3,6 +3,14 @@
 All notable changes to the HPE Networking Assistant are documented here.
 This project adheres to [Semantic Versioning](https://semver.org).
 
+## [1.11.0] — Org configuration backup
+
+### Added
+- **`export_org_config`** — a read-only JSON backup of the organization's configuration: org settings plus sites, site groups/templates, networks, VPNs, services/policies, network/gateway/RF templates, device profiles, WLAN templates and WLANs, NAC tags/rules, alarm templates, and webhooks. Best-effort per resource (an unavailable type is noted in `errors`, not fatal), with per-type counts. The user can save the result as a `.json` file.
+
+### Notes
+- Read-only. Secret-bearing config (e.g. pre-shared keys) is excluded by design; secrets Mist returns are typically already masked.
+
 ## [1.10.0] — SLE scores & switch port stats
 
 ### Added

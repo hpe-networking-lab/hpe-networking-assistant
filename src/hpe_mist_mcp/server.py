@@ -706,6 +706,31 @@ def tool_get_switch_ports(
         return {"error": str(exc)}
 
 
+def tool_export_org_config(org_id: Optional[str] = None, **_: Any) -> Dict[str, Any]:
+    """Export a read-only backup of the organization's configuration as JSON.
+
+    Returns the org settings plus structural config (sites, networks, VPNs,
+    templates, WLANs, NAC rules, webhooks, etc.) so the user can save it to a
+    .json file. Secret-bearing config (e.g. pre-shared keys) is excluded, and
+    any secrets Mist returns are typically already masked.
+    """
+    try:
+        oid = _resolve_org(org_id)
+        bundle = client().export_org_config(oid)
+        org = bundle.get("org") or {}
+        counts = {k: (len(v) if isinstance(v, list) else 1) for k, v in bundle["resources"].items()}
+        return {
+            "org_id": oid,
+            "org_name": org.get("name"),
+            "generated_at": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC"),
+            "resource_counts": counts,
+            "errors": bundle.get("errors") or None,
+            "config": bundle,
+        }
+    except (MistError, ValueError) as exc:
+        return {"error": str(exc)}
+
+
 def tool_start_setup(organization: Optional[str] = None, **_: Any) -> Dict[str, Any]:
     """First-run onboarding: detect region, discover orgs/sites, validate.
 
@@ -1170,6 +1195,15 @@ TOOLS: Dict[str, Dict[str, Any]] = {
             "site_id": {"type": "string", "description": "Restrict to a site (optional)."},
             "up": {"type": "boolean", "description": "Filter to up (true) or down (false) ports (optional)."},
         }),
+    },
+    "export_org_config": {
+        "fn": tool_export_org_config,
+        "description": (
+            "Export a read-only backup of the org configuration as JSON (org settings, sites, "
+            "networks, VPNs, templates, WLANs, NAC rules, webhooks, etc.) for the user to save to "
+            "a .json file. Secrets are excluded/masked."
+        ),
+        "schema": _schema(_ORG),
     },
 }
 

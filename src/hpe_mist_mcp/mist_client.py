@@ -342,6 +342,31 @@ class MistClient:
         params = {"limit": limit, "mac": mac, "site_id": site_id}
         return self._list_from(self._request(f"/api/v1/orgs/{org_id}/stats/ports/search", params))
 
+    # Org config resource types included in a backup (structural config only;
+    # secret-bearing types like psks are intentionally excluded).
+    CONFIG_RESOURCES = [
+        "sites", "sitegroups", "sitetemplates", "networks", "vpns", "services",
+        "servicepolicies", "networktemplates", "gatewaytemplates", "rftemplates",
+        "deviceprofiles", "wlantemplates", "wlans", "nactags", "nacrules",
+        "alarmtemplates", "webhooks",
+    ]
+
+    def export_org_config(
+        self, org_id: str, resources: Optional[List[str]] = None
+    ) -> Dict[str, Any]:
+        """Read-only backup of an org's configuration (best-effort per resource)."""
+        bundle: Dict[str, Any] = {"org": None, "resources": {}, "errors": {}}
+        try:
+            bundle["org"] = self._request(f"/api/v1/orgs/{org_id}")
+        except MistError as exc:
+            bundle["errors"]["org"] = str(exc)
+        for res in (resources or self.CONFIG_RESOURCES):
+            try:
+                bundle["resources"][res] = self._paginate(f"/api/v1/orgs/{org_id}/{res}")
+            except MistError as exc:
+                bundle["errors"][res] = str(exc)
+        return bundle
+
     def get_marvis_actions(self, org_id: str) -> List[Dict[str, Any]]:
         """Return Marvis (AI) suggested actions for the org.
 
