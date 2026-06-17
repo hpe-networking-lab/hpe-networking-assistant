@@ -6,6 +6,7 @@ No Mist configuration is changed; reports are assembled purely from GET data.
 
 from __future__ import annotations
 
+from collections import Counter
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Sequence
 
@@ -182,6 +183,82 @@ def build_inventory_report(
         "device_count": len(devices),
         "devices": devices,
     }
+
+
+def build_firmware_report(
+    client: MistClient, org_id: str, org_name: Optional[str] = None
+) -> Dict[str, Any]:
+    """Assess firmware consistency: per model, the version most of the fleet runs
+    (the 'target') and which devices are behind it."""
+    aps = client.get_access_points(org_id)
+    switches = client.get_switches(org_id)
+
+    groups: Dict[Any, List[Dict[str, Any]]] = {}
+    for devs, typ in ((aps, "AP"), (switches, "switch")):
+        for d in devs:
+            groups.setdefault((typ, d.get("model") or "unknown"), []).append(d)
+
+    models = []
+    non_compliant = 0
+    for (typ, model), devs in sorted(groups.items()):
+        versions = [d.get("version") or "unknown" for d in devs]
+        counts = Counter(versions)
+        target = counts.most_common(1)[0][0]
+        behind = [d for d in devs if (d.get("version") or "unknown") != target]
+        non_compliant += len(behind)
+        models.append({
+            "type": typ,
+            "model": model,
+            "count": len(devs),
+            "target_version": target,
+            "versions": dict(counts),
+            "on_target": len(devs) - len(behind),
+            "behind": [
+                {"name": d.get("name"), "mac": d.get("mac"),
+                 "version": d.get("version") or "unknown", "site_id": d.get("site_id")}
+                for d in behind
+            ],
+        })
+
+    return {
+        "generated_at": _now(),
+        "org_id": org_id,
+        "org_name": org_name,
+        "device_count": sum(len(v) for v in groups.values()),
+        "non_compliant_count": non_compliant,
+        "models": models,
+    }
+
+
+def render_firmware_markdown(data: Dict[str, Any]) -> str:
+    title = data.get("org_name") or data.get("org_id")
+    lines = [
+        f"# Firmware Compliance Report — {title}",
+        "",
+        f"_Generated {data['generated_at']} · {data['device_count']} device(s), "
+        f"{data['non_compliant_count']} behind the fleet target_",
+        "",
+        "## By model",
+        "",
+        _table(
+            ["Type", "Model", "Devices", "Target version", "On target", "Behind"],
+            [
+                [m["type"], m["model"], m["count"], m["target_version"], m["on_target"],
+                 len(m["behind"])]
+                for m in data["models"]
+            ],
+        ),
+    ]
+    behind_rows = [
+        [d["name"] or "—", d["mac"], m["model"], d["version"], m["target_version"]]
+        for m in data["models"] for d in m["behind"]
+    ]
+    lines += ["", "## Devices behind the target version", ""]
+    if behind_rows:
+        lines.append(_table(["Name", "MAC", "Model", "Current", "Target"], behind_rows))
+    else:
+        lines.append("All devices match their model's fleet version.")
+    return "\n".join(lines)
 
 
 def render_inventory_markdown(data: Dict[str, Any]) -> str:

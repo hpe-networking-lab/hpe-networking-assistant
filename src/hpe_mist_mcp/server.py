@@ -24,8 +24,10 @@ from .discovery import discover_region, region_label
 from .mist_client import MistClient, MistError
 from .nac_visualizer import build_nac_overview, render_nac_dashboard_html
 from .reports import (
+    build_firmware_report,
     build_health_report,
     build_inventory_report,
+    render_firmware_markdown,
     render_health_markdown,
     render_inventory_markdown,
 )
@@ -498,6 +500,30 @@ def tool_troubleshoot_authentication(
             "failure_count": len(failures),
             "failures": failures[:50],
             "events": [_nac_event_summary(e) for e in events[:100]],
+        }
+    except (MistError, ValueError) as exc:
+        return {"error": str(exc)}
+
+
+def tool_generate_firmware_report(org_id: Optional[str] = None, **_: Any) -> Dict[str, Any]:
+    """Firmware compliance report: per model, the fleet's majority ('target') version
+    and which APs/switches are behind it. Returns Markdown plus a structured summary."""
+    try:
+        oid = _resolve_org(org_id)
+        data = build_firmware_report(client(), oid, org_name=_org_name(oid))
+        return {
+            "format": "markdown",
+            "generated_at": data["generated_at"],
+            "summary": {
+                "device_count": data["device_count"],
+                "non_compliant_count": data["non_compliant_count"],
+                "models": [
+                    {"type": m["type"], "model": m["model"], "target_version": m["target_version"],
+                     "behind": len(m["behind"])}
+                    for m in data["models"]
+                ],
+            },
+            "markdown": render_firmware_markdown(data),
         }
     except (MistError, ValueError) as exc:
         return {"error": str(exc)}
@@ -1178,6 +1204,14 @@ TOOLS: Dict[str, Dict[str, Any]] = {
         "description": (
             "Generate a full device inventory report as Markdown (every AP and switch with "
             "model, serial, MAC, site, status, and firmware version)."
+        ),
+        "schema": _schema(_ORG),
+    },
+    "generate_firmware_report": {
+        "fn": tool_generate_firmware_report,
+        "description": (
+            "Firmware compliance report (Markdown): for each AP/switch model, the version most "
+            "of the fleet runs and which devices are behind it. Use to find firmware drift."
         ),
         "schema": _schema(_ORG),
     },

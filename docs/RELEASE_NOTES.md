@@ -3,6 +3,14 @@
 All notable changes to the HPE Networking Assistant are documented here.
 This project adheres to [Semantic Versioning](https://semver.org).
 
+## [1.13.0] — Firmware compliance report
+
+### Added
+- **`generate_firmware_report`** — a Markdown firmware-consistency report: for each AP/switch model it finds the version most of the fleet runs (the "target") and lists the devices behind it, with per-model and overall counts. Use it to spot firmware drift across the estate. Built from existing inventory data (no new endpoint).
+
+### Notes
+- Read-only. The target is the fleet **majority** version per model (a robust proxy that avoids fragile version-string parsing).
+
 ## [1.12.0] — Multi-org & config drift
 
 ### Added

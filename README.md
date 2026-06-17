@@ -37,6 +37,7 @@ The HPE Networking Assistant is a read-only [Model Context Protocol (MCP)](https
 | Compare current config to a saved backup (config drift) | `diff_org_config` |
 | Generate a network health report (Markdown) | `generate_health_report` |
 | Generate a full device inventory report (Markdown) | `generate_inventory_report` |
+| Firmware compliance report (drift vs fleet target) | `generate_firmware_report` |
 | Locate a wireless client by MAC or hostname | `find_client` |
 | Trace a client's connection events to troubleshoot | `trace_client` |
 | List Access Assurance (NAC) authenticated clients | `get_nac_clients` |
