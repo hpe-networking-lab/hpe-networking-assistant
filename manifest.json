@@ -2,7 +2,7 @@
   "dxt_version": "0.1",
   "name": "hpe-networking-assistant",
   "display_name": "HPE Networking Assistant",
-  "version": "1.13.0",
+  "version": "1.14.0",
   "description": "Query and (optionally) manage Juniper Mist in natural language from Claude Desktop.",
   "long_description": "The HPE Networking Assistant lets network engineers ask Claude about their Juniper Mist environment in plain English. Setup is just an API token: on first use, ask Claude to set you up and it will automatically detect your Mist region, discover your organizations and sites, validate connectivity, and report READY FOR USE. You never need to know your Org ID, Site ID, or API endpoint. It can discover organizations and sites, list access points, switches, and connected clients, and report offline access points. It runs read-only by default. Write mode is opt-in: when enabled in settings, additional tools can rename and reboot devices, toggle locate LEDs, and claim/assign inventory, each requiring explicit confirmation.",
   "author": {
@@ -40,6 +40,7 @@
     { "name": "generate_health_report", "description": "Generate a network health report (Markdown): totals, offline APs, per-site breakdown." },
     { "name": "generate_inventory_report", "description": "Generate a full device inventory report (Markdown)." },
     { "name": "generate_firmware_report", "description": "Firmware compliance report: per-model target version and devices behind it." },
+    { "name": "generate_topology", "description": "Per-site network topology as a Mermaid diagram (gateways/switches/APs via LLDP)." },
     { "name": "find_client", "description": "Locate a wireless client by MAC or hostname (site, AP, SSID, IP, signal)." },
     { "name": "trace_client", "description": "Trace a client's recent connection events to troubleshoot connectivity/roaming." },
     { "name": "get_nac_clients", "description": "List Access Assurance (NAC) clients: user, type, auth type, SSID, VLAN, rule, status." },

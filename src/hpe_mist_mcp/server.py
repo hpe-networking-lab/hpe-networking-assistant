@@ -31,6 +31,7 @@ from .reports import (
     render_health_markdown,
     render_inventory_markdown,
 )
+from .topology import build_topology
 from .validation import is_write_role, run_validation
 
 logging.basicConfig(
@@ -500,6 +501,53 @@ def tool_troubleshoot_authentication(
             "failure_count": len(failures),
             "failures": failures[:50],
             "events": [_nac_event_summary(e) for e in events[:100]],
+        }
+    except (MistError, ValueError) as exc:
+        return {"error": str(exc)}
+
+
+def tool_generate_topology(
+    site: Optional[str] = None, org_id: Optional[str] = None,
+    include_clients: bool = False, **_: Any,
+) -> Dict[str, Any]:
+    """Build a per-site network topology (Mermaid + structured nodes/edges).
+
+    Gateways, switches and APs are linked using switch-port LLDP neighbors.
+    Pass a site name or id; set include_clients=true to add connected clients as leaves.
+    """
+    try:
+        oid = _resolve_org(org_id)
+        sites = client().get_sites(oid)
+        chosen = None
+        if site:
+            if _looks_like_uuid(site):
+                chosen = next((s for s in sites if s.get("id") == site), None)
+            if chosen is None:
+                q = site.strip().lower()
+                matches = [s for s in sites if q in (s.get("name") or "").lower()]
+                if len(matches) == 1:
+                    chosen = matches[0]
+                elif len(matches) > 1:
+                    return {"status": "NEEDS INPUT",
+                            "message": f"More than one site matches '{site}'.",
+                            "sites": [s.get("name") for s in matches]}
+        elif len(sites) == 1:
+            chosen = sites[0]
+        if chosen is None:
+            return {"status": "NEEDS INPUT",
+                    "message": "Which site? Provide a site name.",
+                    "sites": [s.get("name") for s in sites]}
+        data = build_topology(client(), oid, chosen["id"], site_name=chosen.get("name"),
+                              include_clients=include_clients)
+        return {
+            "format": "mermaid",
+            "org_id": oid,
+            "site": data["site"],
+            "node_count": data["node_count"],
+            "edge_count": data["edge_count"],
+            "mermaid": data["mermaid"],
+            "nodes": data["nodes"],
+            "edges": data["edges"],
         }
     except (MistError, ValueError) as exc:
         return {"error": str(exc)}
@@ -1214,6 +1262,19 @@ TOOLS: Dict[str, Dict[str, Any]] = {
             "of the fleet runs and which devices are behind it. Use to find firmware drift."
         ),
         "schema": _schema(_ORG),
+    },
+    "generate_topology": {
+        "fn": tool_generate_topology,
+        "description": (
+            "Build a per-site network topology as a Mermaid diagram (plus structured nodes/edges): "
+            "gateways, switches, and APs linked via switch-port LLDP neighbors. Provide a site name; "
+            "set include_clients=true to add connected clients. Render the Mermaid or save it."
+        ),
+        "schema": _schema({
+            "site": {"type": "string", "description": "Site name or id (optional if the org has one site)."},
+            **_ORG,
+            "include_clients": {"type": "boolean", "description": "Add connected clients as leaf nodes (optional)."},
+        }),
     },
     "find_client": {
         "fn": tool_find_client,

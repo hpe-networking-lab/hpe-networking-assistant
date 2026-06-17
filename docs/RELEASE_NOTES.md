@@ -3,6 +3,15 @@
 All notable changes to the HPE Networking Assistant are documented here.
 This project adheres to [Semantic Versioning](https://semver.org).
 
+## [1.14.0] — Network topology visualizer
+
+### Added
+- **`generate_topology`** — builds a per-site network topology as a **Mermaid diagram** plus structured nodes/edges. Gateways, switches and APs are nodes; edges come from switch-port **LLDP neighbors** (oriented gateway → switch → AP). Unrecognized neighbors appear as dashed "external" nodes. Optional `include_clients=true` adds connected clients as leaves. Render the Mermaid inline or save it as `.mermaid`/`.md`.
+
+### Notes
+- Read-only; scoped to one site per diagram (provide a site name; auto-selected for single-site orgs).
+- Edges are only as complete as LLDP reporting; APs not on Mist-managed switches won't show a discoverable uplink. A live Cowork topology artifact can follow.
+
 ## [1.13.0] — Firmware compliance report
 
 ### Added

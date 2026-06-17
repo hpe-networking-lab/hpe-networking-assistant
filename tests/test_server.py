@@ -32,6 +32,7 @@ def test_tools_list_has_read_tools_and_setup():
         "generate_health_report",
         "generate_inventory_report",
         "generate_firmware_report",
+        "generate_topology",
         "find_client",
         "trace_client",
         "get_nac_clients",

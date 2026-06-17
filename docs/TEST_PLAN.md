@@ -50,7 +50,7 @@ Run from a clone of the repo. Validates all tools/visualizers offline.
 | # | Step | Command | Expected | Result |
 | --- | --- | --- | --- | --- |
 | A1 | Clone + install | `pip install -e ".[dev]"` | Installs with no errors | |
-| A2 | Run tests | `pytest -q` | **90 passed** | |
+| A2 | Run tests | `pytest -q` | **95 passed** | |
 | A3 | Byte-compile | `python -m compileall src server` | No errors | |
 | A4 | Validate manifest | `python -c "import json;json.load(open('manifest.json'))"` | No error | |
 
@@ -130,6 +130,7 @@ Use natural-language prompts; verify Claude calls the right tool and returns sen
 | RPT-4 | `generate_inventory_report` | "Create an inventory report of all devices." | Markdown table: every AP+switch with model/serial/MAC/site/status/version | |
 | RPT-5 | Convert | "Convert that report to PDF." | Claude produces a PDF from the Markdown | |
 | RPT-6 | `generate_firmware_report` | "Which devices are behind on firmware?" | Per-model target version + list of devices behind it | |
+| RPT-7 | `generate_topology` | "Show me the topology of the <site> site." | Mermaid diagram (gateways/switches/APs via LLDP) + node/edge counts; renders/saves | |
 
 ---
 
@@ -238,7 +239,7 @@ Use natural-language prompts; verify Claude calls the right tool and returns sen
 | SC-2 | Whole install + first query takes **under 10 minutes** | |
 | SC-3 | Customer never needs to know Org ID, Site ID, or API endpoint | |
 | SC-4 | Read-only by default; write mode is opt-in and confirmation-gated | |
-| SC-5 | Automated suite: **90 passed** | |
+| SC-5 | Automated suite: **95 passed** | |
 
 ---
 
