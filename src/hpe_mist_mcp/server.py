@@ -20,6 +20,12 @@ from . import __version__
 from .config import load_config, save_discovery
 from .discovery import discover_region, region_label
 from .mist_client import MistClient, MistError
+from .reports import (
+    build_health_report,
+    build_inventory_report,
+    render_health_markdown,
+    render_inventory_markdown,
+)
 from .validation import is_write_role, run_validation
 
 logging.basicConfig(
@@ -105,6 +111,17 @@ def _require_confirm(confirm: Any) -> None:
             "This action changes your Mist configuration and was not performed. "
             "Re-run with confirm=true to proceed."
         )
+
+
+def _org_name(org_id: str) -> Optional[str]:
+    """Best-effort lookup of an organization's name by id."""
+    try:
+        return next(
+            (o.get("name") for o in client().get_organizations() if o.get("org_id") == org_id),
+            None,
+        )
+    except MistError:
+        return None
 
 
 def _resolve_org(org_id: Optional[str]) -> str:
@@ -255,6 +272,40 @@ def tool_get_offline_access_points(org_id: Optional[str] = None, **_: Any) -> Di
         "offline_count": len(offline),
         "offline_access_points": [_ap_summary(a) for a in offline],
     }
+
+
+def tool_generate_health_report(
+    org_id: Optional[str] = None, include_clients: bool = True, **_: Any
+) -> Dict[str, Any]:
+    """Generate a network health report (Markdown) for an organization."""
+    try:
+        oid = _resolve_org(org_id)
+        data = build_health_report(
+            client(), oid, org_name=_org_name(oid), include_clients=include_clients
+        )
+        return {
+            "format": "markdown",
+            "generated_at": data["generated_at"],
+            "summary": data["totals"],
+            "markdown": render_health_markdown(data),
+        }
+    except (MistError, ValueError) as exc:
+        return {"error": str(exc)}
+
+
+def tool_generate_inventory_report(org_id: Optional[str] = None, **_: Any) -> Dict[str, Any]:
+    """Generate a full device inventory report (Markdown) for an organization."""
+    try:
+        oid = _resolve_org(org_id)
+        data = build_inventory_report(client(), oid, org_name=_org_name(oid))
+        return {
+            "format": "markdown",
+            "generated_at": data["generated_at"],
+            "device_count": data["device_count"],
+            "markdown": render_inventory_markdown(data),
+        }
+    except (MistError, ValueError) as exc:
+        return {"error": str(exc)}
 
 
 def tool_start_setup(organization: Optional[str] = None, **_: Any) -> Dict[str, Any]:
@@ -569,6 +620,29 @@ TOOLS: Dict[str, Dict[str, Any]] = {
     "get_offline_access_points": {
         "fn": tool_get_offline_access_points,
         "description": "Report access points that are currently offline (disconnected).",
+        "schema": _schema(_ORG),
+    },
+    "generate_health_report": {
+        "fn": tool_generate_health_report,
+        "description": (
+            "Generate a network health report as Markdown: device totals, online/offline "
+            "counts, offline AP list, and per-site breakdown. The user can then save it as a "
+            "file. Set include_clients=false to skip the (slower) org-wide client count."
+        ),
+        "schema": _schema({
+            **_ORG,
+            "include_clients": {
+                "type": "boolean",
+                "description": "Include the org-wide wireless client count (default true).",
+            },
+        }),
+    },
+    "generate_inventory_report": {
+        "fn": tool_generate_inventory_report,
+        "description": (
+            "Generate a full device inventory report as Markdown (every AP and switch with "
+            "model, serial, MAC, site, status, and firmware version)."
+        ),
         "schema": _schema(_ORG),
     },
 }

@@ -27,6 +27,8 @@ The HPE Networking Assistant is a read-only [Model Context Protocol (MCP)](https
 | Inventory switches (org-wide or per site) | `get_switches` |
 | List currently connected wireless clients | `get_clients` |
 | Report offline access points | `get_offline_access_points` |
+| Generate a network health report (Markdown) | `generate_health_report` |
+| Generate a full device inventory report (Markdown) | `generate_inventory_report` |
 
 All twelve Mist global cloud regions are supported (Global, EMEA, APAC), selectable at install time.
 
@@ -114,7 +116,7 @@ The packaged extension stores your API token in the OS keychain (macOS Keychain 
 
 ## Roadmap
 
-**Phase 2** (planned): Access Assurance, authentication troubleshooting, client trace workflows, NAC Visualizer integration, and report generation. See [`docs/RELEASE_NOTES.md`](docs/RELEASE_NOTES.md).
+**Phase 2** (in progress): report generation shipped in v1.4.0 (`generate_health_report`, `generate_inventory_report`). Still planned: Access Assurance, authentication troubleshooting, client trace workflows, and NAC Visualizer integration. See [`docs/RELEASE_NOTES.md`](docs/RELEASE_NOTES.md).
 
 ---
 

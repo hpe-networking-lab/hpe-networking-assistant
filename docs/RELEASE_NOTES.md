@@ -3,6 +3,18 @@
 All notable changes to the HPE Networking Assistant are documented here.
 This project adheres to [Semantic Versioning](https://semver.org).
 
+## [1.4.0] — Report generation (Phase 2)
+
+**First Phase 2 capability: on-demand reports.**
+
+### Added
+- **`generate_health_report`** — a Markdown network health report: device totals, online/offline counts, the offline-AP list, and a per-site breakdown. Optional org-wide wireless client count (`include_clients`, default true).
+- **`generate_inventory_report`** — a Markdown table of every AP and switch (model, serial, MAC, site, status, firmware version).
+- `reports.py` module that assembles report data from the existing read-only tools and renders Markdown; Claude can save the output as `.md` or convert to PDF/DOCX on request.
+
+### Notes
+- Reports remain strictly read-only.
+
 ## [1.3.0] — Status & write-readiness wizard
 
 ### Added

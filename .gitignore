@@ -20,8 +20,10 @@ config.json
 *.local.json
 .env
 
-# Scratch
+# Scratch / local helper scripts (not part of the project)
 _probe_sync.txt
+run_*.bat
+*_log.txt
 
 # Tooling
 .pytest_cache/
