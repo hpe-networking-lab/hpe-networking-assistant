@@ -506,6 +506,125 @@ def tool_generate_nac_dashboard(
         return {"error": str(exc)}
 
 
+def _fmt_ms(ts: Any) -> Any:
+    """Format a timestamp that may be epoch milliseconds or seconds."""
+    try:
+        n = float(ts)
+    except (TypeError, ValueError):
+        return ts
+    if n > 1e12:  # milliseconds
+        n /= 1000.0
+    return datetime.fromtimestamp(n, tz=timezone.utc).strftime("%Y-%m-%d %H:%M:%SZ")
+
+
+def _marvis_summary(a: Dict[str, Any]) -> Dict[str, Any]:
+    details = a.get("details") or {}
+    tuples = details.get("impacted_tuple") or []
+    entity = None
+    if tuples and isinstance(tuples[0], dict):
+        entity = tuples[0].get("entity_name") or tuples[0].get("entity_id")
+    return {
+        "symptom": a.get("symptom"),
+        "category": a.get("category"),
+        "suggestion": a.get("suggestion") or details.get("marvis_action"),
+        "status": a.get("status"),
+        "severity": a.get("severity"),
+        "entity_type": a.get("entity_type") or a.get("display_entity_type"),
+        "entity": entity or a.get("display_entity_id"),
+        "site_id": a.get("site_id"),
+        "since": _fmt_ms(a.get("start_time")),
+    }
+
+
+def _alarm_summary(a: Dict[str, Any]) -> Dict[str, Any]:
+    return {
+        "time": _fmt_ms(a.get("timestamp") or a.get("last_seen")),
+        "type": a.get("type"),
+        "severity": a.get("severity"),
+        "group": a.get("group"),
+        "count": a.get("count"),
+        "site_id": a.get("site_id"),
+        "acked": a.get("acked"),
+    }
+
+
+def _wired_summary(r: Dict[str, Any]) -> Dict[str, Any]:
+    return {
+        "mac": r.get("mac"),
+        "hostname": r.get("last_hostname"),
+        "ip": r.get("last_ip"),
+        "switch_mac": r.get("last_device_mac"),
+        "port": r.get("last_port_id"),
+        "vlan": r.get("last_vlan"),
+        "vlan_name": r.get("last_vlan_name"),
+        "manufacture": r.get("manufacture"),
+        "site_id": r.get("site_id"),
+        "last_seen": _fmt_ms(r.get("timestamp")),
+    }
+
+
+def tool_get_marvis_actions(
+    org_id: Optional[str] = None, status: Optional[str] = None, **_: Any,
+) -> Dict[str, Any]:
+    """List Marvis (AI) suggested actions — what Mist thinks is wrong and how to fix it.
+
+    Pass status="open" to show only active items (default: all).
+    """
+    try:
+        oid = _resolve_org(org_id)
+        actions = client().get_marvis_actions(oid)
+        if status:
+            actions = [a for a in actions if str(a.get("status", "")).lower() == status.lower()]
+        return {
+            "org_id": oid,
+            "count": len(actions),
+            "open_count": sum(1 for a in actions if a.get("status") == "open"),
+            "by_category": dict(Counter(a.get("category") for a in actions if a.get("category"))),
+            "actions": [_marvis_summary(a) for a in actions[:100]],
+        }
+    except (MistError, ValueError) as exc:
+        return {"error": str(exc)}
+
+
+def tool_get_alarms(
+    org_id: Optional[str] = None, severity: Optional[str] = None, duration: str = "1d", **_: Any,
+) -> Dict[str, Any]:
+    """List organization alarms over a window, with per-severity and per-type counts."""
+    try:
+        oid = _resolve_org(org_id)
+        alarms = client().search_alarms(oid, severity=severity, duration=duration)
+        return {
+            "org_id": oid,
+            "duration": duration,
+            "count": len(alarms),
+            "by_severity": dict(Counter(a.get("severity") for a in alarms if a.get("severity"))),
+            "by_type": dict(Counter(a.get("type") for a in alarms if a.get("type"))),
+            "alarms": [_alarm_summary(a) for a in alarms[:100]],
+        }
+    except (MistError, ValueError) as exc:
+        return {"error": str(exc)}
+
+
+def tool_get_wired_clients(
+    org_id: Optional[str] = None, site_id: Optional[str] = None, mac: Optional[str] = None,
+    hostname: Optional[str] = None, duration: str = "1d", **_: Any,
+) -> Dict[str, Any]:
+    """List wired clients (devices on switch ports): switch, port, VLAN, IP, vendor."""
+    try:
+        oid = _resolve_org(org_id)
+        rows = client().search_wired_clients(oid, mac=mac, hostname=hostname, duration=duration)
+        if site_id:
+            rows = [r for r in rows if r.get("site_id") == site_id]
+        return {
+            "org_id": oid,
+            "site_id": site_id,
+            "count": len(rows),
+            "wired_clients": [_wired_summary(r) for r in rows],
+        }
+    except (MistError, ValueError) as exc:
+        return {"error": str(exc)}
+
+
 def tool_start_setup(organization: Optional[str] = None, **_: Any) -> Dict[str, Any]:
     """First-run onboarding: detect region, discover orgs/sites, validate.
 
@@ -908,6 +1027,45 @@ TOOLS: Dict[str, Dict[str, Any]] = {
         "schema": _schema({
             **_ORG,
             "duration": {"type": "string", "description": "Lookback window, e.g. 1d, 1h, 7d (default 1d)."},
+        }),
+    },
+    "get_marvis_actions": {
+        "fn": tool_get_marvis_actions,
+        "description": (
+            "List Marvis (AI) suggested actions — Mist's prioritized view of what's wrong "
+            "(offline switches/APs, non-compliant firmware, misconfigured ports, RF/DFS issues) "
+            "and the recommended fix. Use for 'what's wrong with my network?'. "
+            "Pass status=\"open\" for active items only."
+        ),
+        "schema": _schema({
+            **_ORG,
+            "status": {"type": "string", "description": "Filter by status, e.g. open (optional)."},
+        }),
+    },
+    "get_alarms": {
+        "fn": tool_get_alarms,
+        "description": (
+            "List organization alarms over a window with per-severity and per-type counts "
+            "(device/switch/gateway offline, restarts, security, Marvis). Optional severity filter."
+        ),
+        "schema": _schema({
+            **_ORG,
+            "severity": {"type": "string", "description": "Filter by severity, e.g. critical/warn/info (optional)."},
+            "duration": {"type": "string", "description": "Lookback window, e.g. 1d, 1h, 7d (default 1d)."},
+        }),
+    },
+    "get_wired_clients": {
+        "fn": tool_get_wired_clients,
+        "description": (
+            "List wired clients (devices seen on switch ports): switch MAC, port, VLAN, IP, and "
+            "vendor. Optional mac / hostname / site_id filters. Complements get_clients (wireless)."
+        ),
+        "schema": _schema({
+            **_ORG,
+            "site_id": {"type": "string", "description": "Restrict to a site (optional)."},
+            "mac": {"type": "string", "description": "Filter by client MAC (optional)."},
+            "hostname": {"type": "string", "description": "Filter by hostname (optional)."},
+            "duration": {"type": "string", "description": "Lookback window, e.g. 1d, 7d (default 1d)."},
         }),
     },
 }

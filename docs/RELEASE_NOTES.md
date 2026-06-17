@@ -3,6 +3,17 @@
 All notable changes to the HPE Networking Assistant are documented here.
 This project adheres to [Semantic Versioning](https://semver.org).
 
+## [1.9.0] — Marvis Actions, alarms & wired visibility
+
+### Added
+- **`get_marvis_actions`** — Mist's AI-prioritized view of what's wrong (offline switches/APs, non-compliant firmware, misconfigured ports, RF/DFS issues) and the recommended fix. Answers "what's wrong with my network?". Optional `status="open"` filter; returns per-category counts.
+- **`get_alarms`** — organization alarms over a window with per-severity and per-type counts (device/switch/gateway offline, restarts, security, Marvis).
+- **`get_wired_clients`** — wired clients seen on switch ports (switch MAC, port, VLAN, IP, vendor), complementing the wireless `get_clients`. Optional `mac` / `hostname` / `site_id` filters.
+
+### Notes
+- All three are read-only.
+- The Marvis Actions endpoint path (`/orgs/:org_id/suggestion`) is the best-known path; confirm against your tenant during the live smoke test.
+
 ## [1.8.0] — Debug authentication by user
 
 ### Added

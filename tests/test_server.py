@@ -36,6 +36,9 @@ def test_tools_list_has_read_tools_and_setup():
         "get_nac_clients",
         "troubleshoot_authentication",
         "generate_nac_dashboard",
+        "get_marvis_actions",
+        "get_alarms",
+        "get_wired_clients",
     }
     for tool in res["tools"]:
         assert tool["inputSchema"]["type"] == "object"

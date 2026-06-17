@@ -2,7 +2,7 @@
 
 End-to-end acceptance test plan covering the **installation process** and **every tool and visualizer**. Written to be executed on a single Windows PC acting as the test client.
 
-- **Product version under test:** 1.8.0
+- **Product version under test:** 1.9.0
 - **Repository:** https://github.com/hpe-networking-lab/hpe-networking-assistant
 - **Two test layers:**
   1. **Automated** — the `pytest` suite (65 tests) validates all tool logic with a mocked Mist API; no token or network required.
@@ -50,7 +50,7 @@ Run from a clone of the repo. Validates all tools/visualizers offline.
 | # | Step | Command | Expected | Result |
 | --- | --- | --- | --- | --- |
 | A1 | Clone + install | `pip install -e ".[dev]"` | Installs with no errors | |
-| A2 | Run tests | `pytest -q` | **66 passed** | |
+| A2 | Run tests | `pytest -q` | **74 passed** | |
 | A3 | Byte-compile | `python -m compileall src server` | No errors | |
 | A4 | Validate manifest | `python -c "import json;json.load(open('manifest.json'))"` | No error | |
 
@@ -109,6 +109,9 @@ Use natural-language prompts; verify Claude calls the right tool and returns sen
 | RO-7 | `get_clients` | "How many clients are connected at <site>?" | Client count/list | |
 | RO-8 | `get_offline_access_points` | "Which access points are offline right now?" | Offline AP list (matches portal) | |
 | RO-9 | Cross-check | Compare RO-4/RO-8 counts to the Mist portal | Numbers match | |
+| RO-10 | `get_wired_clients` | "List wired clients / what's on switch port X?" | Wired clients with switch MAC, port, VLAN, IP, vendor | |
+| RO-11 | `get_marvis_actions` | "What's wrong with my network?" | Marvis suggested actions + fixes, per-category counts; `status=open` filters to active | |
+| RO-12 | `get_alarms` | "Show critical alarms in the last day." | Alarms with per-severity/per-type counts | |
 
 ---
 
@@ -229,7 +232,7 @@ Use natural-language prompts; verify Claude calls the right tool and returns sen
 | SC-2 | Whole install + first query takes **under 10 minutes** | |
 | SC-3 | Customer never needs to know Org ID, Site ID, or API endpoint | |
 | SC-4 | Read-only by default; write mode is opt-in and confirmation-gated | |
-| SC-5 | Automated suite: **66 passed** | |
+| SC-5 | Automated suite: **74 passed** | |
 
 ---
 

@@ -302,6 +302,35 @@ class MistClient:
         }
         return self._search(f"/api/v1/orgs/{org_id}/nac_clients/events/search", params)
 
+    def search_wired_clients(
+        self, org_id: str, mac: Optional[str] = None, hostname: Optional[str] = None,
+        duration: str = "1d", limit: int = 100,
+    ) -> List[Dict[str, Any]]:
+        """Search wired clients (devices seen on switch ports) across an org."""
+        params = {"duration": duration, "limit": limit, "mac": mac, "hostname": hostname}
+        return self._search(f"/api/v1/orgs/{org_id}/wired_clients/search", params)
+
+    def search_alarms(
+        self, org_id: str, severity: Optional[str] = None, duration: str = "1d", limit: int = 100,
+    ) -> List[Dict[str, Any]]:
+        """Search org alarms over a time window (optionally filtered by severity)."""
+        params = {"duration": duration, "limit": limit, "severity": severity}
+        return self._search(f"/api/v1/orgs/{org_id}/alarms/search", params)
+
+    def get_marvis_actions(self, org_id: str) -> List[Dict[str, Any]]:
+        """Return Marvis (AI) suggested actions for the org.
+
+        NOTE: the Marvis Actions endpoint path is /orgs/:org_id/suggestion; confirm
+        against your tenant if your account exposes it under a different path.
+        """
+        data = self._request(f"/api/v1/orgs/{org_id}/suggestion")
+        if isinstance(data, dict):
+            for key in ("results", "suggestions", "actions", "data"):
+                if isinstance(data.get(key), list):
+                    return data[key]
+            return []
+        return data if isinstance(data, list) else []
+
     # -- writes (only permitted when read_only is False) -------------------
 
     def rename_device(self, site_id: str, device_id: str, name: str) -> Dict[str, Any]:
