@@ -1,0 +1,72 @@
+{
+  "dxt_version": "0.1",
+  "name": "hpe-networking-assistant",
+  "display_name": "HPE Networking Assistant",
+  "version": "1.3.0",
+  "description": "Query and (optionally) manage Juniper Mist in natural language from Claude Desktop.",
+  "long_description": "The HPE Networking Assistant lets network engineers ask Claude about their Juniper Mist environment in plain English. Setup is just an API token: on first use, ask Claude to set you up and it will automatically detect your Mist region, discover your organizations and sites, validate connectivity, and report READY FOR USE. You never need to know your Org ID, Site ID, or API endpoint. It can discover organizations and sites, list access points, switches, and connected clients, and report offline access points. It runs read-only by default. Write mode is opt-in: when enabled in settings, additional tools can rename and reboot devices, toggle locate LEDs, and claim/assign inventory, each requiring explicit confirmation.",
+  "author": {
+    "name": "HPE Networking"
+  },
+  "homepage": "https://github.com/hpe-networking/hpe-networking-assistant",
+  "documentation": "https://github.com/hpe-networking/hpe-networking-assistant/blob/main/README.md",
+  "support": "https://github.com/hpe-networking/hpe-networking-assistant/issues",
+  "icon": "icon.png",
+  "server": {
+    "type": "python",
+    "entry_point": "server/main.py",
+    "mcp_config": {
+      "command": "python",
+      "args": [
+        "${__dirname}/server/main.py"
+      ],
+      "env": {
+        "PYTHONPATH": "${__dirname}/server/lib",
+        "PYTHONUNBUFFERED": "1",
+        "MIST_API_TOKEN": "${user_config.api_token}",
+        "MIST_WRITE_ENABLED": "${user_config.enable_write}"
+      }
+    }
+  },
+  "tools": [
+    { "name": "start_setup", "description": "First-run onboarding: auto-detect region, discover orgs/sites, validate, and report READY FOR USE." },
+    { "name": "get_status", "description": "Report current mode (read-only/read-write), region, organization, and write readiness." },
+    { "name": "get_organizations", "description": "List the Mist organizations the API token can access." },
+    { "name": "get_sites", "description": "List the sites in an organization." },
+    { "name": "get_access_points", "description": "List access points in an organization or site." },
+    { "name": "get_switches", "description": "List switches in an organization or site." },
+    { "name": "get_clients", "description": "List currently connected wireless clients." },
+    { "name": "get_offline_access_points", "description": "Report access points that are currently offline." },
+    { "name": "rename_device", "description": "[WRITE] Rename a device (write mode only; requires confirmation)." },
+    { "name": "reboot_device", "description": "[WRITE] Reboot a device (write mode only; requires confirmation)." },
+    { "name": "locate_device", "description": "[WRITE] Toggle a device locate LED (write mode only; requires confirmation)." },
+    { "name": "claim_devices", "description": "[WRITE] Claim devices into an org (write mode only; requires confirmation)." },
+    { "name": "assign_devices_to_site", "description": "[WRITE] Assign devices to a site (write mode only; requires confirmation)." }
+  ],
+  "tools_generated": false,
+  "keywords": ["juniper", "mist", "networking", "hpe", "wifi", "switches"],
+  "license": "MIT",
+  "user_config": {
+    "api_token": {
+      "type": "string",
+      "title": "Mist API Token",
+      "description": "Your Juniper Mist API token — the only thing you need to enter. Create one in the Mist portal under My Account > API Token. Stored securely in your OS keychain. After install, ask Claude to \"set me up\" and it will auto-detect your region and discover your organizations and sites.",
+      "sensitive": true,
+      "required": true
+    },
+    "enable_write": {
+      "type": "boolean",
+      "title": "Enable write operations (advanced)",
+      "description": "OFF by default. When enabled, the assistant can change your Mist environment: rename/reboot devices, toggle locate LEDs, and claim/assign inventory. Every write still requires an explicit confirmation. Leave OFF for safe, read-only use. Your API token must also have write privileges.",
+      "required": false,
+      "default": false
+    }
+  },
+  "compatibility": {
+    "claude_desktop": ">=0.10.0",
+    "platforms": ["darwin", "win32", "linux"],
+    "runtimes": {
+      "python": ">=3.10.0"
+    }
+  }
+}

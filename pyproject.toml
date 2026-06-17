@@ -1,0 +1,34 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "hpe-networking-assistant"
+version = "1.3.0"
+description = "Read-only Juniper Mist MCP server for Claude Desktop - query your network in natural language."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "HPE Networking" }]
+keywords = ["mcp", "juniper", "mist", "networking", "claude", "hpe"]
+# No runtime dependencies: the MCP server speaks the JSON-RPC stdio protocol
+# using only the Python standard library, so the packaged extension is small
+# and fully cross-platform (no compiled binaries to bundle per OS).
+dependencies = []
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4",
+]
+
+[project.scripts]
+hpe-mist-mcp = "hpe_mist_mcp.server:main"
+hpe-mist-setup = "hpe_mist_mcp.setup_wizard:main"
+hpe-mist-validate = "hpe_mist_mcp.validation:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"

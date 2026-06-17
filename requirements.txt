@@ -1,0 +1,8 @@
+# Runtime dependencies: none.
+#
+# The HPE Networking Assistant MCP server implements the Model Context Protocol
+# stdio transport using only the Python standard library, so there is nothing
+# to install at runtime and nothing to vendor into the packaged extension.
+#
+# Development/test extras (pytest) are declared in pyproject.toml under
+# [project.optional-dependencies] and installed with: pip install -e ".[dev]"

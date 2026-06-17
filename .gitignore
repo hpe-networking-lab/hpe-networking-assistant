@@ -1,0 +1,37 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+env/
+
+# Packaging
+server/lib/
+*.dxt
+*.mcpb
+
+# Local config / secrets — never commit API tokens
+.hpe-networking-assistant/
+config.json
+*.local.json
+.env
+
+# Scratch
+_probe_sync.txt
+
+# Tooling
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# OS / editors
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
