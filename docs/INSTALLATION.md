@@ -25,7 +25,7 @@ You do **not** need to know your region, API endpoint, Org ID, or Site ID. The a
 
 ## Step 2 — Install the extension
 
-1. Download `hpe-networking-assistant.dxt` from the [latest GitHub release](https://github.com/hpe-networking/hpe-networking-assistant/releases/latest).
+1. Download `hpe-networking-assistant.dxt` from the [latest GitHub release](https://github.com/hpe-networking-lab/hpe-networking-assistant/releases/latest).
 2. Open Claude Desktop → **Settings → Extensions**.
 3. Drag the `.dxt` file into the window (or double-click it in your file manager).
 4. Claude Desktop shows a short form. Enter:

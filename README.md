@@ -44,7 +44,7 @@ Three layers of protection apply: write mode must be explicitly enabled, your AP
 ## Quick start
 
 1. Install [Claude Desktop](https://claude.ai/download).
-2. Download `hpe-networking-assistant.dxt` from the [latest release](https://github.com/hpe-networking/hpe-networking-assistant/releases/latest).
+2. Download `hpe-networking-assistant.dxt` from the [latest release](https://github.com/hpe-networking-lab/hpe-networking-assistant/releases/latest).
 3. Double-click the file (or drag it into Claude Desktop → **Settings → Extensions**).
 4. When prompted, paste your **Mist API token** — that's the only field.
 5. In a new chat, say **"Set me up."** The assistant auto-detects your region, discovers your organizations and sites, runs validation, and reports **READY FOR USE**.
@@ -69,7 +69,7 @@ You don't pick a region. On first run, `start_setup` probes the Mist clouds with
 ## Developing locally
 
 ```bash
-git clone https://github.com/hpe-networking/hpe-networking-assistant.git
+git clone https://github.com/hpe-networking-lab/hpe-networking-assistant.git
 cd hpe-networking-assistant
 python -m venv .venv && source .venv/bin/activate   # Windows: .venv\Scripts\activate
 pip install -e ".[dev]"
@@ -118,7 +118,7 @@ The packaged extension stores your API token in the OS keychain (macOS Keychain 
 - The API token is never logged (it is masked in any diagnostic output).
 - Tokens are stored in the OS keychain by the extension, or in a `0600`-permissioned file by the setup wizard.
 
-Report security issues via the [issue tracker](https://github.com/hpe-networking/hpe-networking-assistant/issues).
+Report security issues via the [issue tracker](https://github.com/hpe-networking-lab/hpe-networking-assistant/issues).
 
 ---
 

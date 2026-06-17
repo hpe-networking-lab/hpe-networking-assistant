@@ -66,7 +66,7 @@ Ask *"What organizations can I access?"* to get the exact IDs.
 
 - Re-run the connectivity checks above.
 - Developers/admins can run `hpe-mist-validate` for a **READY FOR USE / REQUIRES ATTENTION** report.
-- File issues at <https://github.com/hpe-networking/hpe-networking-assistant/issues>.
+- File issues at <https://github.com/hpe-networking-lab/hpe-networking-assistant/issues>.
 
 ## 8. What's next (Phase 2)
 

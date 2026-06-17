@@ -8,9 +8,9 @@
   "author": {
     "name": "HPE Networking"
   },
-  "homepage": "https://github.com/hpe-networking/hpe-networking-assistant",
-  "documentation": "https://github.com/hpe-networking/hpe-networking-assistant/blob/main/README.md",
-  "support": "https://github.com/hpe-networking/hpe-networking-assistant/issues",
+  "homepage": "https://github.com/hpe-networking-lab/hpe-networking-assistant",
+  "documentation": "https://github.com/hpe-networking-lab/hpe-networking-assistant/blob/main/README.md",
+  "support": "https://github.com/hpe-networking-lab/hpe-networking-assistant/issues",
   "icon": "icon.png",
   "server": {
     "type": "python",

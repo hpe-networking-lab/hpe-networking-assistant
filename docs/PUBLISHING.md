@@ -69,9 +69,9 @@ Watch the run under the repo's **Actions** tab. When it finishes, the
 
 ## Notes
 
-- The repo `homepage`/`documentation`/`support` URLs in `manifest.json` point to
-  `github.com/hpe-networking/...`. If you publish under a different owner, update
-  those three fields (and the links in `README.md`) before tagging a release.
+- The repo `homepage`/`documentation`/`support` URLs in `manifest.json` and the
+  `README.md` links point to `github.com/hpe-networking-lab/hpe-networking-assistant`.
+  If you publish under a different owner, update those to match.
 - `.gitignore` already excludes secrets (`config.json`, `.env`,
   `.hpe-networking-assistant/`), build output, and caches.
 - For future releases: bump the version in `manifest.json`, `pyproject.toml`, and
